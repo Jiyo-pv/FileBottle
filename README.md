@@ -1,42 +1,10 @@
-\# 🍾 FileBottle – Java Client-Server File Sharing System
+\# 🍾 FileBottle
 
 
 
-FileBottle is a multi-user client-server file sharing system built using Java (Swing + Sockets).  
+FileBottle is a Java-based Client-Server File Sharing System that enables secure multi-user file management over a network.  
 
-It allows users to securely upload, download, rename, delete, and manage files over a network.
-
-
-
----
-
-
-
-\## 🚀 Features
-
-
-
-\- 🔐 User Registration \& Login
-
-\- 🔑 Password Hashing (Secure Storage)
-
-\- 📂 Upload / Download Files
-
-\- ✏ Rename Files
-
-\- 🗑 Delete Files
-
-\- 🌐 Custom IP Server Connection
-
-\- 🖥 Run As Server Mode
-
-\- 👥 Multi-client Support
-
-\- 📊 Connected Clients Counter
-
-\- 🧾 Activity Logging (Login, Password Change)
-
-\- 🎨 Modern Swing UI Design
+It supports authentication, file operations, sharing permissions, and activity logging through a modern Swing interface.
 
 
 
@@ -44,31 +12,135 @@ It allows users to securely upload, download, rename, delete, and manage files o
 
 
 
-\## 🏗 Architecture
+\## 🚀 Overview
 
 
 
-FileBottle follows a Client-Server Architecture:
+FileBottle allows multiple users to connect to a central server and perform file operations securely.  
+
+The system is built using Java Sockets, Multithreading, File I/O, and JDBC for database integration.
 
 
 
-\- \*\*Server\*\*
+The application supports both:
 
-&nbsp; - Handles file storage
+\- \*\*Server Mode\*\*
 
-&nbsp; - Manages multiple clients using threads
-
-&nbsp; - Stores files in `FileBottleServer/` directory
+\- \*\*Client Mode (Localhost / Custom IP)\*\*
 
 
 
-\- \*\*Client\*\*
+---
 
-&nbsp; - Connects via IP Address
 
-&nbsp; - Authenticates users
 
-&nbsp; - Sends file commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
+\## ✨ Features
+
+
+
+\### 🔐 Authentication
+
+\- User Registration \& Login
+
+\- Secure Password Hashing
+
+\- Change Password
+
+\- Login Activity Logging
+
+
+
+\### 📂 File Management
+
+\- Upload Files
+
+\- Download Files
+
+\- Rename Files
+
+\- Move to Trash
+
+\- Permanent Delete
+
+\- Restore from Trash
+
+
+
+\### 👥 Multi-User Support
+
+\- Dedicated folder per user
+
+\- Simultaneous client connections
+
+\- Connected clients counter (Server View)
+
+
+
+\### 🖥 Server Control
+
+\- Run As Server mode
+
+\- Displays local IP address
+
+\- Stop Server button
+
+\- Real-time connected client count
+
+
+
+\### 📊 Activity Logging
+
+\- File upload/download/edit logs
+
+\- Login logs
+
+\- Password change logs
+
+\- Share activity tracking
+
+
+
+\### 🎨 UI
+
+\- Modern Swing interface
+
+\- Styled buttons and panels
+
+\- Clean dashboard layout
+
+
+
+---
+
+
+
+\## 🏗 System Architecture
+
+
+
+FileBottle follows a \*\*Client-Server Architecture\*\*.
+
+
+
+\### Server
+
+\- Listens on Port 5000
+
+\- Handles multiple clients using threads
+
+\- Manages file storage
+
+\- Maintains connected client count
+
+
+
+\### Client
+
+\- Connects via IP address
+
+\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
+
+\- Authenticates using database
 
 
 
@@ -86,9 +158,9 @@ FileBottle/
 
 │
 
-├── src/                  # Java source files
+├── src/                    # Java source files
 
-├── nbproject/            # NetBeans project config
+├── nbproject/              # NetBeans configuration
 
 ├── .gitignore
 
@@ -98,7 +170,11 @@ FileBottle/
 
 
 
-Runtime folder (auto-created, not tracked in Git):
+\### Runtime Folder (Auto-Generated)
+
+
+
+This folder is created automatically when server runs:
 
 
 
@@ -110,7 +186,13 @@ FileBottleServer/
 
 &nbsp;├── user\_2/
 
+&nbsp;├── ...
+
 ```
+
+
+
+⚠ This folder is ignored in Git (`.gitignore`).
 
 
 
@@ -122,13 +204,13 @@ FileBottleServer/
 
 
 
-\### Option 1 – Run from NetBeans
+\### Option 1: Run in NetBeans
 
-1\. Open project in NetBeans
+1\. Open project
 
 2\. Click Run
 
-3\. Choose:
+3\. Select:
 
 &nbsp;  - Use Localhost
 
@@ -142,11 +224,11 @@ FileBottleServer/
 
 
 
-\### Option 2 – Run Using JAR
+\### Option 2: Run Using JAR
 
 
 
-1\. Build Project (`Clean \& Build`)
+1\. Clean \& Build project
 
 2\. Go to `dist/`
 
@@ -154,7 +236,7 @@ FileBottleServer/
 
 
 
-OR via command:
+OR via terminal:
 
 
 
@@ -170,23 +252,25 @@ java -jar FileBottle.jar
 
 
 
-\## 🌐 Using Over Network
+\## 🌐 Running Over Network
 
 
 
-1\. On one machine:
+1️⃣ On Host Machine:
 
-&nbsp;  - Click \*\*Run As Server\*\*
+\- Click \*\*Run As Server\*\*
 
-&nbsp;  - Note the displayed IP address
+\- Note the displayed IP address
 
 
 
-2\. On other machines:
+2️⃣ On Client Machines:
 
-&nbsp;  - Choose \*\*Custom IP\*\*
+\- Choose \*\*Custom IP\*\*
 
-&nbsp;  - Enter server IP
+\- Enter server IP
+
+\- Login/Register
 
 
 
@@ -194,15 +278,17 @@ java -jar FileBottle.jar
 
 
 
-\## 🔐 Security
+\## 🔒 Security
 
 
 
 \- Passwords are hashed before storing in database.
 
-\- Each user has a separate folder on the server.
+\- Users have isolated folders on server.
 
-\- Files are isolated per user.
+\- File access is controlled per user.
+
+\- Server root is dynamically resolved to JAR location (deployment-safe).
 
 
 
@@ -224,7 +310,9 @@ java -jar FileBottle.jar
 
 \- File I/O
 
-\- JDBC (Database Integration)
+\- JDBC
+
+\- Oracle / SQL Database
 
 \- NetBeans IDE
 
@@ -234,15 +322,17 @@ java -jar FileBottle.jar
 
 
 
-\## 📦 Deployment Notes
+\## 📌 Deployment Notes
 
 
 
-\- `FileBottleServer/` is auto-generated.
+\- The server storage folder is created automatically next to the JAR.
 
-\- Runtime folders are ignored via `.gitignore`.
+\- Works when launched via double-click.
 
-\- Works when launched via JAR from any directory.
+\- Can be added to system PATH for command-line launching.
+
+\- Compatible with Windows systems running Java.
 
 
 
@@ -250,25 +340,29 @@ java -jar FileBottle.jar
 
 
 
-\## 🎓 Academic Purpose
+\## 🎓 Academic Scope
 
 
 
-This project was developed as a client-server system to demonstrate:
+This project demonstrates:
 
 
 
-\- Socket programming
+\- Socket Programming
 
-\- Multithreading
+\- Multi-threading
 
-\- File handling
+\- Database Connectivity (JDBC)
 
-\- Authentication systems
+\- File Handling
 
-\- Secure password storage
+\- Authentication Systems
 
-\- UI design using Swing
+\- Password Hashing
+
+\- Client-Server Architecture
+
+\- GUI Development using Swing
 
 
 
@@ -292,5 +386,5 @@ This project was developed as a client-server system to demonstrate:
 
 
 
-This project is for educational purposes.
+This project is developed for educational and academic purposes.
 
