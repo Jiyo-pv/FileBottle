@@ -1,0 +1,13 @@
+# Ignore all FileBottleServer folders anywhere
+FileBottleServer/
+**/FileBottleServer/
+
+# Ignore build and dist folders (NetBeans)
+build/
+dist/
+
+# Ignore NetBeans private config
+nbproject/private/
+
+# Ignore log files
+*.log
