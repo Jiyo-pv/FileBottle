@@ -6,7 +6,7 @@ FileBottle is a Java-based Client-Server File Sharing System that enables secure
 
 
 
-Overview
+🚀 Overview
 
 
 
@@ -30,9 +30,9 @@ Multi-user concurrent access
 
 
 
-Features
+✨ Features
 
-Authentication
+🔐 Authentication
 
 
 
@@ -52,7 +52,7 @@ Login activity logging
 
 
 
-File Management
+📁 File Management
 
 
 
@@ -80,7 +80,7 @@ Permanent deletion
 
 
 
-Multi-User Support
+👥 Multi-User Support
 
 
 
@@ -96,7 +96,7 @@ Connected clients counter (Server View)
 
 
 
-Server Controls
+🖥 Server Controls
 
 
 
@@ -116,7 +116,7 @@ Real-time connected client tracking
 
 
 
-Activity Logging
+📊 Activity Logging
 
 
 
@@ -132,7 +132,81 @@ Password change tracking
 
 
 
-How To Run
+🏗 System Architecture
+
+
+
+FileBottle follows a Client-Server Architecture.
+
+
+
+Server
+
+
+
+Listens on Port 5000
+
+
+
+Handles multiple clients using multithreading
+
+
+
+Manages file storage in a dedicated server folder
+
+
+
+Client
+
+
+
+Connects via IP address
+
+
+
+Authenticates using database
+
+
+
+Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
+
+
+
+📂 Project Structure
+
+FileBottle/
+
+│
+
+├── src/                  Java source code
+
+├── nbproject/            NetBeans configuration
+
+├── .gitignore
+
+├── README.md
+
+
+
+Runtime folder (auto-created when server runs):
+
+
+
+FileBottleServer/
+
+&nbsp;├── user\_1/
+
+&nbsp;├── user\_2/
+
+&nbsp;├── ...
+
+
+
+
+
+
+
+▶️ How To Run
 
 Run from NetBeans
 
@@ -182,7 +256,59 @@ java -jar FileBottle.jar
 
 
 
-Technologies Used
+Or double-click the JAR file.
+
+
+
+🌐 Running Over Network
+
+
+
+On Host Machine:
+
+
+
+Click Run As Server
+
+
+
+Note the displayed IP address
+
+
+
+On Client Machines:
+
+
+
+Choose Custom IP
+
+
+
+Enter the server IP
+
+
+
+Login or register
+
+
+
+🛡 Security
+
+
+
+Passwords are hashed before storing in the database
+
+
+
+Each user has an isolated folder on the server
+
+
+
+File access is restricted to authenticated users
+
+
+
+🛠 Technologies Used
 
 
 
@@ -218,9 +344,17 @@ NetBeans IDE
 
 
 
-Author
+👨‍💻 Author
 
 
 
 Jiyo P V
+
+
+
+📜 License
+
+
+
+This project is developed for educational and academic purposes.
 
