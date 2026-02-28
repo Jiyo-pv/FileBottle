@@ -192,7 +192,7 @@ FileBottleServer/
 
 
 
-⚠ This folder is ignored in Git (`.gitignore`).
+
 
 
 
