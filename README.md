@@ -1,4 +1,4 @@
-\# FileBottle
+FileBottle
 
 
 
@@ -6,11 +6,7 @@ FileBottle is a Java-based Client-Server File Sharing System that enables secure
 
 
 
----
-
-
-
-\## Overview
+Overview
 
 
 
@@ -20,191 +16,165 @@ FileBottle allows multiple users to connect to a central server and securely man
 
 The application supports:
 
-\- Server Mode
 
-\- Client Mode (Localhost / Custom IP)
 
-\- Multi-user concurrent access
+Server Mode
 
 
 
----
+Client Mode (Localhost / Custom IP)
 
 
 
-\## Features
+Multi-user concurrent access
 
 
 
-\### Authentication
+Features
 
-\- User Registration and Login
+Authentication
 
-\- Secure Password Hashing
 
-\- Change Password functionality
 
-\- Login activity logging
+User Registration and Login
 
 
 
-\### File Management
+Secure Password Hashing
 
-\- Upload files
 
-\- Download files
 
-\- Rename files
+Change Password functionality
 
-\- Move files to trash
 
-\- Restore from trash
 
-\- Permanent deletion
+Login activity logging
 
 
 
-\### Multi-User Support
+File Management
 
-\- Dedicated folder for each user
 
-\- Concurrent client handling using threads
 
-\- Connected clients counter (Server View)
+Upload files
 
 
 
-\### Server Controls
+Download files
 
-\- Run As Server mode
 
-\- Displays local IP address
 
-\- Stop Server functionality
+Rename files
 
-\- Real-time connected client tracking
 
 
+Move files to trash
 
-\### Activity Logging
 
-\- Logs for uploads, downloads, edits
 
-\- Login activity tracking
+Restore from trash
 
-\- Password change tracking
 
 
+Permanent deletion
 
----
 
 
+Multi-User Support
 
-\## System Architecture
 
 
+Dedicated folder for each user
 
-FileBottle follows a Client-Server Architecture.
 
 
+Concurrent client handling using threads
 
-\### Server
 
-\- Listens on Port 5000
 
-\- Handles multiple clients using threads
+Connected clients counter (Server View)
 
-\- Manages file storage
 
-\- Maintains connected client count
 
+Server Controls
 
 
-\### Client
 
-\- Connects via IP address
+Run As Server mode
 
-\- Authenticates using database
 
-\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
 
+Displays local IP address
 
 
----
 
+Stop Server functionality
 
 
-\## Project Structure
 
+Real-time connected client tracking
 
 
-FileBottle/
 
-│
+Activity Logging
 
-├── src/                  Java source code  
 
-├── nbproject/            NetBeans configuration  
 
-├── .gitignore  
+Logs for uploads, downloads, edits
 
-├── README.md  
 
 
+Login activity tracking
 
-Runtime folder (auto-created when server runs):
 
 
+Password change tracking
 
-FileBottleServer/
 
-&nbsp;├── user\_1/
 
-&nbsp;├── user\_2/
+How To Run
 
-&nbsp;├── ...
+Run from NetBeans
 
 
 
+Open project in NetBeans
 
 
 
+Click Run
 
----
 
 
+Choose:
 
-\## How To Run
 
 
+Use Localhost
 
-\### Run from NetBeans
 
-1\. Open project in NetBeans
 
-2\. Click Run
+Custom IP
 
-3\. Choose:
 
-&nbsp;  - Use Localhost
 
-&nbsp;  - Custom IP
+Run As Server
 
-&nbsp;  - Run As Server
 
 
+Run Using JAR
 
-\### Run Using JAR
 
-1\. Clean \& Build the project
 
-2\. Navigate to the `dist` folder
+Clean \& Build the project
 
-3\. Double-click `FileBottle.jar`
 
 
+Navigate to the dist folder
 
-Or run using command line:
+
+
+Run:
 
 
 
@@ -212,123 +182,45 @@ java -jar FileBottle.jar
 
 
 
----
+Technologies Used
 
 
 
-\## Running Over Network
+Java SE
 
 
 
-1\. On Host Machine:
+Java Swing
 
-&nbsp;  - Click "Run As Server"
 
-&nbsp;  - Note the displayed IP address
 
+Java Sockets
 
 
-2\. On Client Machines:
 
-&nbsp;  - Choose "Custom IP"
+Multithreading
 
-&nbsp;  - Enter the server IP
 
-&nbsp;  - Login or register
 
+File I/O
 
 
----
 
+JDBC
 
 
-\## Security
 
+SQL / Oracle Database
 
 
-\- Passwords are hashed before storing in the database
 
-\- Each user has an isolated folder on the server
+NetBeans IDE
 
-\- File access is restricted to authenticated users
 
 
-
----
-
-
-
-\## Technologies Used
-
-
-
-\- Java SE
-
-\- Java Swing
-
-\- Java Sockets
-
-\- Multithreading
-
-\- File I/O
-
-\- JDBC
-
-\- SQL / Oracle Database
-
-\- NetBeans IDE
-
-
-
----
-
-
-
-\## Academic Scope
-
-
-
-This project demonstrates:
-
-
-
-\- Socket Programming
-
-\- Multithreading
-
-\- Database Connectivity
-
-\- File Handling
-
-\- Authentication Systems
-
-\- Password Hashing
-
-\- GUI Development using Swing
-
-\- Client-Server Architecture Design
-
-
-
----
-
-
-
-\## Author
+Author
 
 
 
 Jiyo P V
-
-
-
----
-
-
-
-\## License
-
-
-
-This project is developed for educational and academic purposes.
 
