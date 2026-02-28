@@ -1,4 +1,4 @@
-FileBottle
+\# FileBottle
 
 
 
@@ -6,7 +6,11 @@ FileBottle is a Java-based Client-Server File Sharing System that enables secure
 
 
 
-🚀 Overview
+---
+
+
+
+\## Overview
 
 
 
@@ -18,121 +22,87 @@ The application supports:
 
 
 
-Server Mode
+\- Server Mode  
 
+\- Client Mode (Localhost / Custom IP)  
 
+\- Multi-user concurrent access  
 
-Client Mode (Localhost / Custom IP)
 
 
+---
 
-Multi-user concurrent access
 
 
+\## Features
 
-✨ Features
 
-🔐 Authentication
 
+\### Authentication
 
+\- User Registration and Login  
 
-User Registration and Login
+\- Secure Password Hashing  
 
+\- Change Password functionality  
 
+\- Login activity logging  
 
-Secure Password Hashing
 
 
+\### File Management
 
-Change Password functionality
+\- Upload files  
 
+\- Download files  
 
+\- Rename files  
 
-Login activity logging
+\- Move files to trash  
 
+\- Restore from trash  
 
+\- Permanent deletion  
 
-📁 File Management
 
 
+\### Multi-User Support
 
-Upload files
+\- Dedicated folder for each user  
 
+\- Concurrent client handling using threads  
 
+\- Connected clients counter (Server View)  
 
-Download files
 
 
+\### Server Controls
 
-Rename files
+\- Run As Server mode  
 
+\- Displays local IP address  
 
+\- Stop Server functionality  
 
-Move files to trash
+\- Real-time connected client tracking  
 
 
 
-Restore from trash
+\### Activity Logging
 
+\- Logs for uploads, downloads, edits  
 
+\- Login activity tracking  
 
-Permanent deletion
+\- Password change tracking  
 
 
 
-👥 Multi-User Support
+---
 
 
 
-Dedicated folder for each user
-
-
-
-Concurrent client handling using threads
-
-
-
-Connected clients counter (Server View)
-
-
-
-🖥 Server Controls
-
-
-
-Run As Server mode
-
-
-
-Displays local IP address
-
-
-
-Stop Server functionality
-
-
-
-Real-time connected client tracking
-
-
-
-📊 Activity Logging
-
-
-
-Logs for uploads, downloads, edits
-
-
-
-Login activity tracking
-
-
-
-Password change tracking
-
-
-
-🏗 System Architecture
+\## System Architecture
 
 
 
@@ -140,51 +110,45 @@ FileBottle follows a Client-Server Architecture.
 
 
 
-Server
+\### Server
+
+\- Listens on Port 5000  
+
+\- Handles multiple clients using multithreading  
+
+\- Manages file storage in a dedicated server folder  
 
 
 
-Listens on Port 5000
+\### Client
+
+\- Connects via IP address  
+
+\- Authenticates using database  
+
+\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)  
 
 
 
-Handles multiple clients using multithreading
+---
 
 
 
-Manages file storage in a dedicated server folder
+\## Project Structure
 
 
-
-Client
-
-
-
-Connects via IP address
-
-
-
-Authenticates using database
-
-
-
-Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
-
-
-
-📂 Project Structure
 
 FileBottle/
 
-│
+│  
 
-├── src/                  Java source code
+├── src/                  Java source code  
 
-├── nbproject/            NetBeans configuration
+├── nbproject/            NetBeans configuration  
 
-├── .gitignore
+├── .gitignore  
 
-├── README.md
+├── README.md  
 
 
 
@@ -192,63 +156,53 @@ Runtime folder (auto-created when server runs):
 
 
 
-FileBottleServer/
+FileBottleServer/  
 
-&nbsp;├── user\_1/
+&nbsp;├── user\_1/  
 
-&nbsp;├── user\_2/
+&nbsp;├── user\_2/  
 
-&nbsp;├── ...
-
-
+&nbsp;├── ...  
 
 
 
 
 
-▶️ How To Run
-
-Run from NetBeans
 
 
-
-Open project in NetBeans
+---
 
 
 
-Click Run
+\## How To Run
 
 
 
-Choose:
+\### Run from NetBeans
+
+1\. Open project in NetBeans  
+
+2\. Click Run  
+
+3\. Choose:
+
+&nbsp;  - Use Localhost  
+
+&nbsp;  - Custom IP  
+
+&nbsp;  - Run As Server  
 
 
 
-Use Localhost
+\### Run Using JAR
 
 
 
-Custom IP
+1\. Clean \& Build the project  
 
+2\. Navigate to the dist folder  
 
-
-Run As Server
-
-
-
-Run Using JAR
-
-
-
-Clean \& Build the project
-
-
-
-Navigate to the dist folder
-
-
-
-Run:
+3\. Run:
 
 
 
@@ -260,99 +214,91 @@ Or double-click the JAR file.
 
 
 
-🌐 Running Over Network
+---
 
 
 
-On Host Machine:
+\## Running Over Network
 
 
 
-Click Run As Server
+1\. On Host Machine:
 
+&nbsp;  - Click Run As Server  
 
+&nbsp;  - Note the displayed IP address  
 
-Note the displayed IP address
 
 
+2\. On Client Machines:
 
-On Client Machines:
+&nbsp;  - Choose Custom IP  
 
+&nbsp;  - Enter the server IP  
 
+&nbsp;  - Login or register  
 
-Choose Custom IP
 
 
+---
 
-Enter the server IP
 
 
+\## Security
 
-Login or register
 
 
+\- Passwords are hashed before storing in the database  
 
-🛡 Security
+\- Each user has an isolated folder on the server  
 
+\- File access is restricted to authenticated users  
 
 
-Passwords are hashed before storing in the database
 
+---
 
 
-Each user has an isolated folder on the server
 
+\## Technologies Used
 
 
-File access is restricted to authenticated users
 
+\- Java SE  
 
+\- Java Swing  
 
-🛠 Technologies Used
+\- Java Sockets  
 
+\- Multithreading  
 
+\- File I/O  
 
-Java SE
+\- JDBC  
 
+\- SQL / Oracle Database  
 
+\- NetBeans IDE  
 
-Java Swing
 
 
+---
 
-Java Sockets
 
 
+\## Author
 
-Multithreading
 
 
+Jiyo P V  
 
-File I/O
 
 
+---
 
-JDBC
 
 
-
-SQL / Oracle Database
-
-
-
-NetBeans IDE
-
-
-
-👨‍💻 Author
-
-
-
-Jiyo P V
-
-
-
-📜 License
+\## License
 
 
 
