@@ -1,32 +1,8 @@
-\# 🍾 FileBottle
+\# FileBottle
 
 
 
-FileBottle is a Java-based Client-Server File Sharing System that enables secure multi-user file management over a network.  
-
-It supports authentication, file operations, sharing permissions, and activity logging through a modern Swing interface.
-
-
-
----
-
-
-
-\## 🚀 Overview
-
-
-
-FileBottle allows multiple users to connect to a central server and perform file operations securely.  
-
-The system is built using Java Sockets, Multithreading, File I/O, and JDBC for database integration.
-
-
-
-The application supports both:
-
-\- \*\*Server Mode\*\*
-
-\- \*\*Client Mode (Localhost / Custom IP)\*\*
+FileBottle is a Java-based Client-Server File Sharing System that enables secure multi-user file management over a network. It supports authentication, file upload/download, file operations, activity logging, and server monitoring through a modern Swing interface.
 
 
 
@@ -34,79 +10,89 @@ The application supports both:
 
 
 
-\## ✨ Features
+\## Overview
 
 
 
-\### 🔐 Authentication
+FileBottle allows multiple users to connect to a central server and securely manage files. The system is built using Java Sockets, Multithreading, File I/O, and JDBC for database connectivity.
 
-\- User Registration \& Login
+
+
+The application supports:
+
+\- Server Mode
+
+\- Client Mode (Localhost / Custom IP)
+
+\- Multi-user concurrent access
+
+
+
+---
+
+
+
+\## Features
+
+
+
+\### Authentication
+
+\- User Registration and Login
 
 \- Secure Password Hashing
 
-\- Change Password
+\- Change Password functionality
 
-\- Login Activity Logging
-
-
-
-\### 📂 File Management
-
-\- Upload Files
-
-\- Download Files
-
-\- Rename Files
-
-\- Move to Trash
-
-\- Permanent Delete
-
-\- Restore from Trash
+\- Login activity logging
 
 
 
-\### 👥 Multi-User Support
+\### File Management
 
-\- Dedicated folder per user
+\- Upload files
 
-\- Simultaneous client connections
+\- Download files
+
+\- Rename files
+
+\- Move files to trash
+
+\- Restore from trash
+
+\- Permanent deletion
+
+
+
+\### Multi-User Support
+
+\- Dedicated folder for each user
+
+\- Concurrent client handling using threads
 
 \- Connected clients counter (Server View)
 
 
 
-\### 🖥 Server Control
+\### Server Controls
 
 \- Run As Server mode
 
 \- Displays local IP address
 
-\- Stop Server button
+\- Stop Server functionality
 
-\- Real-time connected client count
-
-
-
-\### 📊 Activity Logging
-
-\- File upload/download/edit logs
-
-\- Login logs
-
-\- Password change logs
-
-\- Share activity tracking
+\- Real-time connected client tracking
 
 
 
-\### 🎨 UI
+\### Activity Logging
 
-\- Modern Swing interface
+\- Logs for uploads, downloads, edits
 
-\- Styled buttons and panels
+\- Login activity tracking
 
-\- Clean dashboard layout
+\- Password change tracking
 
 
 
@@ -114,11 +100,11 @@ The application supports both:
 
 
 
-\## 🏗 System Architecture
+\## System Architecture
 
 
 
-FileBottle follows a \*\*Client-Server Architecture\*\*.
+FileBottle follows a Client-Server Architecture.
 
 
 
@@ -138,9 +124,9 @@ FileBottle follows a \*\*Client-Server Architecture\*\*.
 
 \- Connects via IP address
 
-\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
-
 \- Authenticates using database
+
+\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)
 
 
 
@@ -148,37 +134,27 @@ FileBottle follows a \*\*Client-Server Architecture\*\*.
 
 
 
-\## 📁 Project Structure
+\## Project Structure
 
 
-
-```
 
 FileBottle/
 
 │
 
-├── src/                    # Java source files
+├── src/                  Java source code  
 
-├── nbproject/              # NetBeans configuration
+├── nbproject/            NetBeans configuration  
 
-├── .gitignore
+├── .gitignore  
 
-├── README.md
-
-```
+├── README.md  
 
 
 
-\### Runtime Folder (Auto-Generated)
+Runtime folder (auto-created when server runs):
 
 
-
-This folder is created automatically when server runs:
-
-
-
-```
 
 FileBottleServer/
 
@@ -188,8 +164,6 @@ FileBottleServer/
 
 &nbsp;├── ...
 
-```
-
 
 
 
@@ -200,17 +174,17 @@ FileBottleServer/
 
 
 
-\## ⚙️ How To Run
+\## How To Run
 
 
 
-\### Option 1: Run in NetBeans
+\### Run from NetBeans
 
-1\. Open project
+1\. Open project in NetBeans
 
 2\. Click Run
 
-3\. Select:
+3\. Choose:
 
 &nbsp;  - Use Localhost
 
@@ -220,31 +194,47 @@ FileBottleServer/
 
 
 
----
+\### Run Using JAR
 
+1\. Clean \& Build the project
 
-
-\### Option 2: Run Using JAR
-
-
-
-1\. Clean \& Build project
-
-2\. Go to `dist/`
+2\. Navigate to the `dist` folder
 
 3\. Double-click `FileBottle.jar`
 
 
 
-OR via terminal:
+Or run using command line:
 
 
-
-```
 
 java -jar FileBottle.jar
 
-```
+
+
+---
+
+
+
+\## Running Over Network
+
+
+
+1\. On Host Machine:
+
+&nbsp;  - Click "Run As Server"
+
+&nbsp;  - Note the displayed IP address
+
+
+
+2\. On Client Machines:
+
+&nbsp;  - Choose "Custom IP"
+
+&nbsp;  - Enter the server IP
+
+&nbsp;  - Login or register
 
 
 
@@ -252,25 +242,15 @@ java -jar FileBottle.jar
 
 
 
-\## 🌐 Running Over Network
+\## Security
 
 
 
-1️⃣ On Host Machine:
+\- Passwords are hashed before storing in the database
 
-\- Click \*\*Run As Server\*\*
+\- Each user has an isolated folder on the server
 
-\- Note the displayed IP address
-
-
-
-2️⃣ On Client Machines:
-
-\- Choose \*\*Custom IP\*\*
-
-\- Enter server IP
-
-\- Login/Register
+\- File access is restricted to authenticated users
 
 
 
@@ -278,31 +258,13 @@ java -jar FileBottle.jar
 
 
 
-\## 🔒 Security
-
-
-
-\- Passwords are hashed before storing in database.
-
-\- Users have isolated folders on server.
-
-\- File access is controlled per user.
-
-\- Server root is dynamically resolved to JAR location (deployment-safe).
-
-
-
----
-
-
-
-\## 🛠 Technologies Used
+\## Technologies Used
 
 
 
 \- Java SE
 
-\- Java Swing (UI)
+\- Java Swing
 
 \- Java Sockets
 
@@ -312,7 +274,7 @@ java -jar FileBottle.jar
 
 \- JDBC
 
-\- Oracle / SQL Database
+\- SQL / Oracle Database
 
 \- NetBeans IDE
 
@@ -322,25 +284,7 @@ java -jar FileBottle.jar
 
 
 
-\## 📌 Deployment Notes
-
-
-
-\- The server storage folder is created automatically next to the JAR.
-
-\- Works when launched via double-click.
-
-\- Can be added to system PATH for command-line launching.
-
-\- Compatible with Windows systems running Java.
-
-
-
----
-
-
-
-\## 🎓 Academic Scope
+\## Academic Scope
 
 
 
@@ -350,9 +294,9 @@ This project demonstrates:
 
 \- Socket Programming
 
-\- Multi-threading
+\- Multithreading
 
-\- Database Connectivity (JDBC)
+\- Database Connectivity
 
 \- File Handling
 
@@ -360,21 +304,9 @@ This project demonstrates:
 
 \- Password Hashing
 
-\- Client-Server Architecture
-
 \- GUI Development using Swing
 
-
-
----
-
-
-
-\## 👤 Author
-
-
-
-\*\*Jiyo P V\*\*
+\- Client-Server Architecture Design
 
 
 
@@ -382,7 +314,19 @@ This project demonstrates:
 
 
 
-\## 📜 License
+\## Author
+
+
+
+Jiyo P V
+
+
+
+---
+
+
+
+\## License
 
 
 
