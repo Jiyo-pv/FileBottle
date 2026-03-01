@@ -139,8 +139,7 @@ FileBottle follows a Client-Server Architecture.
 
 
 FileBottle/
-
-│  
+  
 
 ├── src/                  Java source code  
 
