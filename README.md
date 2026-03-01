@@ -1,4 +1,4 @@
-\# FileBottle
+# FileBottle
 
 
 
@@ -10,7 +10,7 @@ FileBottle is a Java-based Client-Server File Sharing System that enables secure
 
 
 
-\## Overview
+## Overview
 
 
 
@@ -22,79 +22,11 @@ The application supports:
 
 
 
-\- Server Mode  
+- Server Mode  
 
-\- Client Mode (Localhost / Custom IP)  
+- Client Mode (Localhost / Custom IP)  
 
-\- Multi-user concurrent access  
-
-
-
----
-
-
-
-\## Features
-
-
-
-\### Authentication
-
-\- User Registration and Login  
-
-\- Secure Password Hashing  
-
-\- Change Password functionality  
-
-\- Login activity logging  
-
-
-
-\### File Management
-
-\- Upload files  
-
-\- Download files  
-
-\- Rename files  
-
-\- Move files to trash  
-
-\- Restore from trash  
-
-\- Permanent deletion  
-
-
-
-\### Multi-User Support
-
-\- Dedicated folder for each user  
-
-\- Concurrent client handling using threads  
-
-\- Connected clients counter (Server View)  
-
-
-
-\### Server Controls
-
-\- Run As Server mode  
-
-\- Displays local IP address  
-
-\- Stop Server functionality  
-
-\- Real-time connected client tracking  
-
-
-
-\### Activity Logging
-
-\- Logs for uploads, downloads, edits  
-
-\- Login activity tracking  
-
-\- Password change tracking  
+- Multi-user concurrent access  
 
 
 
@@ -102,7 +34,75 @@ The application supports:
 
 
 
-\## System Architecture
+## Features
+
+
+
+### Authentication
+
+- User Registration and Login  
+
+- Secure Password Hashing  
+
+- Change Password functionality  
+
+- Login activity logging  
+
+
+
+### File Management
+
+- Upload files  
+
+- Download files  
+
+- Rename files  
+
+- Move files to trash  
+
+- Restore from trash  
+
+- Permanent deletion  
+
+
+
+### Multi-User Support
+
+- Dedicated folder for each user  
+
+- Concurrent client handling using threads  
+
+- Connected clients counter (Server View)  
+
+
+
+### Server Controls
+
+- Run As Server mode  
+
+- Displays local IP address  
+
+- Stop Server functionality  
+
+- Real-time connected client tracking  
+
+
+
+### Activity Logging
+
+- Logs for uploads, downloads, edits  
+
+- Login activity tracking  
+
+- Password change tracking  
+
+
+
+---
+
+
+
+## System Architecture
 
 
 
@@ -110,23 +110,23 @@ FileBottle follows a Client-Server Architecture.
 
 
 
-\### Server
+### Server
 
-\- Listens on Port 5000  
+- Listens on Port 5000  
 
-\- Handles multiple clients using multithreading  
+- Handles multiple clients using multithreading  
 
-\- Manages file storage in a dedicated server folder  
+- Manages file storage in a dedicated server folder  
 
 
 
-\### Client
+### Client
 
-\- Connects via IP address  
+- Connects via IP address  
 
-\- Authenticates using database  
+- Authenticates using database  
 
-\- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)  
+- Sends commands (UPLOAD, DOWNLOAD, DELETE, RENAME)  
 
 
 
@@ -134,7 +134,7 @@ FileBottle follows a Client-Server Architecture.
 
 
 
-\## Project Structure
+## Project Structure
 
 
 
@@ -174,17 +174,17 @@ FileBottleServer/
 
 
 
-\## How To Run
+## How To Run
 
 
 
-\### Run from NetBeans
+### Run from NetBeans
 
-1\. Open project in NetBeans  
+1. Open project in NetBeans  
 
-2\. Click Run  
+2. Click Run  
 
-3\. Choose:
+3. Choose:
 
 &nbsp;  - Use Localhost  
 
@@ -194,15 +194,15 @@ FileBottleServer/
 
 
 
-\### Run Using JAR
+### Run Using JAR
 
 
 
-1\. Clean \& Build the project  
+1. Clean \& Build the project  
 
-2\. Navigate to the dist folder  
+2. Navigate to the dist folder  
 
-3\. Run:
+3. Run:
 
 
 
@@ -218,11 +218,11 @@ Or double-click the JAR file.
 
 
 
-\## Running Over Network
+## Running Over Network
 
 
 
-1\. On Host Machine:
+1. On Host Machine:
 
 &nbsp;  - Click Run As Server  
 
@@ -230,7 +230,7 @@ Or double-click the JAR file.
 
 
 
-2\. On Client Machines:
+2. On Client Machines:
 
 &nbsp;  - Choose Custom IP  
 
@@ -244,41 +244,15 @@ Or double-click the JAR file.
 
 
 
-\## Security
+## Security
 
 
 
-\- Passwords are hashed before storing in the database  
+- Passwords are hashed before storing in the database  
 
-\- Each user has an isolated folder on the server  
+- Each user has an isolated folder on the server  
 
-\- File access is restricted to authenticated users  
-
-
-
----
-
-
-
-\## Technologies Used
-
-
-
-\- Java SE  
-
-\- Java Swing  
-
-\- Java Sockets  
-
-\- Multithreading  
-
-\- File I/O  
-
-\- JDBC  
-
-\- SQL / Oracle Database  
-
-\- NetBeans IDE  
+- File access is restricted to authenticated users  
 
 
 
@@ -286,7 +260,33 @@ Or double-click the JAR file.
 
 
 
-\## Author
+## Technologies Used
+
+
+
+- Java SE  
+
+- Java Swing  
+
+- Java Sockets  
+
+- Multithreading  
+
+- File I/O  
+
+- JDBC  
+
+- SQL / Oracle Database  
+
+- NetBeans IDE  
+
+
+
+---
+
+
+
+## Author
 
 
 
@@ -298,7 +298,7 @@ Jiyo P V
 
 
 
-\## License
+## License
 
 
 
