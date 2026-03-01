@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class FileServer implements Runnable {
 private ServerSocket serverSocket;
@@ -7,7 +9,21 @@ private volatile boolean running = true;
 private static int connectedClients = 0;
     private static final int PORT = 5000;
     private String serverRoot;
+private static int loggedInUsers = 0;
 
+public static synchronized void userLoggedIn() {
+    loggedInUsers++;
+}
+
+public static synchronized void userLoggedOut() {
+    if (loggedInUsers > 0) {
+        loggedInUsers--;
+    }
+}
+
+public static int getLoggedInUsers() {
+    return loggedInUsers;
+}
     public FileServer(String serverRoot) {
         this.serverRoot = serverRoot;
     }
@@ -20,7 +36,7 @@ private static int connectedClients = 0;
         if (serverSocket != null && !serverSocket.isClosed()) {
             serverSocket.close();
         }
-        System.out.println("Server stopped.");
+        
     } catch (Exception e) {
         e.printStackTrace();
     }
@@ -30,7 +46,7 @@ private static int connectedClients = 0;
 
     try {
         serverSocket = new ServerSocket(5000);
-        System.out.println("File Server running on port 5000");
+       
 
         while (running) {
 
@@ -38,12 +54,12 @@ private static int connectedClients = 0;
 
             connectedClients++;
 
-            System.out.println("Client connected. Total: " + connectedClients);
+            
 
             new Thread(() -> {
                 handleClient(socket);
                 connectedClients--;
-                System.out.println("Client disconnected. Total: " + connectedClients);
+                
             }).start();
         }
 
@@ -67,6 +83,7 @@ private static int connectedClients = 0;
 
                 String userFolder = in.readUTF();
                 String filename = in.readUTF();
+                serverLog("UPLOAD - " + filename + " to " + userFolder);
                 long fileSize = in.readLong();
 
                 File folder = new File(serverRoot + File.separator + userFolder);
@@ -93,12 +110,24 @@ private static int connectedClients = 0;
                 fos.close();
                 out.writeUTF("SUCCESS");
             }
+            else if (command.equals("LOGIN_NOTIFY")) {
+                loggedInUsers++;
+                 out.writeUTF("OK");
+                 serverLog("USER LOGGED IN");
+}
+else if (command.equals("LOGOUT_NOTIFY")) {
+    if (loggedInUsers > 0) {
+        loggedInUsers--;
+    }
+    serverLog("USER LOGGED OUT");
+    out.writeUTF("OK");
+}
             else if (command.equals("RENAME")) {
 
     String userFolder = in.readUTF();
     String oldName = in.readUTF();
     String newName = in.readUTF();
-
+serverLog("RENAME - " + oldName + " to " + newName + " in " + userFolder);
     File oldFile = new File(serverRoot + File.separator
             + userFolder + File.separator + oldName);
 
@@ -122,7 +151,7 @@ private static int connectedClients = 0;
 
     String userFolder = in.readUTF();
     String filename = in.readUTF();
-
+serverLog("DELETE - " + filename + " from " + userFolder);
     File file = new File(serverRoot + File.separator
             + userFolder + File.separator + filename);
 
@@ -143,12 +172,10 @@ private static int connectedClients = 0;
 
                 String userFolder = in.readUTF();
                 String filename = in.readUTF();
-                System.out.println("Requested by client:");
-System.out.println("User folder: " + userFolder);
-System.out.println("Filename: " + filename);
+               serverLog("DOWNLOAD - " + filename + " from " + userFolder);
                 File file = new File(serverRoot + File.separator
                         + userFolder + File.separator + filename);
-                System.err.println(file.getAbsolutePath());
+               
                 if (!file.exists()) {
                     out.writeLong(-1);
                     return;
@@ -172,4 +199,25 @@ System.out.println("Filename: " + filename);
             e.printStackTrace();
         }
     }
+    private void serverLog(String action) {
+
+    try {
+
+        Connection con = DBConnection.getConnection("127.0.0.1"); 
+        // or use serverIP if needed
+
+        String sql = "INSERT INTO server_log " +
+                     "(log_id, action, log_time) " +
+                     "VALUES (server_log_seq.NEXTVAL, ?, SYSDATE)";
+
+        PreparedStatement pst = con.prepareStatement(sql);
+        pst.setString(1, action);
+        pst.executeUpdate();
+
+        con.close();
+
+    } catch (Exception e) {
+        System.out.println("Server log failed: " + e.getMessage());
+    }
+}
 }

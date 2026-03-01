@@ -2,10 +2,15 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -14,6 +19,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 
 /*
@@ -189,8 +196,26 @@ btnRunServer.setText("Run As Server");
     }//GEN-LAST:event_btnCustomIPActionPerformed
 
     private void btnLocalhostActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLocalhostActionPerformed
- new LoginRegister("127.0.0.1").setVisible(true);
-    dispose();        // TODO add your handling code here:
+    try {
+
+        String jarDir = new File(
+            FileServer.class
+                .getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI()
+        ).getParent();
+
+        String serverFolder = jarDir + File.separator + "FileBottleServer";
+
+        new Thread(new FileServer(serverFolder)).start();
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    new LoginRegister("127.0.0.1").setVisible(true);
+    dispose();       // TODO add your handling code here:
     }//GEN-LAST:event_btnLocalhostActionPerformed
 
     private void btnRunServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunServerActionPerformed
@@ -216,7 +241,7 @@ new Thread(server).start();
 }
 
         JFrame serverFrame = new JFrame("FileBottle Server");
-serverFrame.setSize(450, 300);
+serverFrame.setSize(450, 500);
 serverFrame.setLocationRelativeTo(null);
 serverFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 serverFrame.getContentPane().setBackground(new Color(18, 22, 30));
@@ -257,6 +282,17 @@ clientsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
 clientsLabel.setForeground(Color.WHITE);
 clientsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+// ===== Server Logs Area =====
+JTextArea logArea = new JTextArea();
+logArea.setEditable(false);
+logArea.setBackground(new Color(30, 34, 45));
+logArea.setForeground(new Color(0, 255, 150));
+logArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+
+JScrollPane logScroll = new JScrollPane(logArea);logScroll.setAlignmentX(Component.CENTER_ALIGNMENT);
+logScroll.setMaximumSize(new Dimension(400, 180));
+logScroll.setMinimumSize(new Dimension(400, 180));
+logScroll.setPreferredSize(new Dimension(400, 180));
 // Stop Button
 JButton stopBtn = new JButton("Stop Server");
 stopBtn.setFocusPainted(false);
@@ -276,17 +312,37 @@ mainPanel.add(Box.createVerticalStrut(15));
 mainPanel.add(ipLabel);
 mainPanel.add(Box.createVerticalStrut(20));
 mainPanel.add(clientsLabel);
-mainPanel.add(Box.createVerticalStrut(25));
+mainPanel.add(Box.createVerticalStrut(15));
+mainPanel.add(logScroll);
+mainPanel.add(Box.createVerticalStrut(15));
+
+
+JButton viewLogsBtn = new JButton("View Server Logs");
+viewLogsBtn.setFocusPainted(false);
+viewLogsBtn.setBackground(new Color(41,121,255));
+viewLogsBtn.setForeground(Color.WHITE);
+viewLogsBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+viewLogsBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+viewLogsBtn.addActionListener(e -> openFullLogViewer());
+
+
+
+mainPanel.add(viewLogsBtn);
 mainPanel.add(stopBtn);
+
 
 serverFrame.add(mainPanel, BorderLayout.CENTER);
 serverFrame.setVisible(true);
 dispose();
 
 new javax.swing.Timer(1000, e -> {
+
     clientsLabel.setText(
-        "Connected Clients: " + FileServer.getConnectedClients()
+        "Logged In Users: " + FileServer.getLoggedInUsers()
     );
+
+    logArea.setText(getLatestServerLogs());
+
 }).start();
 
     } catch (Exception e) {
@@ -330,7 +386,108 @@ new javax.swing.Timer(1000, e -> {
             }
         });
     }
+  private String getLatestServerLogs() {
 
+    StringBuilder logs = new StringBuilder();
+
+    try {
+
+        Connection con = DBConnection.getConnection("127.0.0.1");
+
+        String sql =
+            "SELECT log_entry FROM (" +
+            " SELECT TO_CHAR(log_time, 'HH24:MI:SS') || '  |  ' || action AS log_entry " +
+            " FROM server_log " +
+            " ORDER BY log_id DESC" +
+            ") WHERE ROWNUM <= 10";
+
+        PreparedStatement pst = con.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+            logs.append(rs.getString("log_entry")).append("\n");
+        }
+
+        con.close();
+
+    } catch (Exception e) {
+        logs.append("Log load error");
+    }
+
+    return logs.toString();
+}
+    private void openFullLogViewer() {
+
+    JFrame logFrame = new JFrame("Full Server Logs");
+    logFrame.setSize(700, 500);
+    logFrame.setLocationRelativeTo(null);
+    logFrame.setLayout(new BorderLayout());
+    logFrame.getContentPane().setBackground(new Color(18,22,30));
+
+    JTextArea logArea = new JTextArea();
+    logArea.setEditable(false);
+    logArea.setBackground(new Color(30,34,45));
+    logArea.setForeground(new Color(0,255,150));
+    logArea.setFont(new Font("Consolas", Font.PLAIN, 13));
+
+    JScrollPane scrollPane = new JScrollPane(logArea);
+
+    JButton refreshBtn = new JButton("Refresh");
+    refreshBtn.setFocusPainted(false);
+    refreshBtn.setBackground(new Color(41,121,255));
+    refreshBtn.setForeground(Color.WHITE);
+
+    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    topPanel.setBackground(new Color(18,22,30));
+    topPanel.add(refreshBtn);
+
+    logFrame.add(topPanel, BorderLayout.NORTH);
+    logFrame.add(scrollPane, BorderLayout.CENTER);
+
+    // Load logs initially
+    logArea.setText(getAllServerLogs());
+
+    refreshBtn.addActionListener(ev -> {
+        logArea.setText(getAllServerLogs());
+    });
+
+    logFrame.setVisible(true);
+}
+    
+    private String getAllServerLogs() {
+
+    StringBuilder logs = new StringBuilder();
+
+    try {
+
+        Connection con = DBConnection.getConnection("127.0.0.1");
+
+        String sql =
+            "SELECT log_id, action, log_time " +
+            "FROM server_log " +
+            "ORDER BY log_id DESC";
+
+        PreparedStatement pst = con.prepareStatement(sql);
+        ResultSet rs = pst.executeQuery();
+
+        while (rs.next()) {
+
+            logs.append(rs.getInt("log_id"))
+                .append(" | ")
+                .append(rs.getTimestamp("log_time"))
+                .append(" | ")
+                .append(rs.getString("action"))
+                .append("\n");
+        }
+
+        con.close();
+
+    } catch (Exception e) {
+        logs.append("Error loading logs.");
+    }
+
+    return logs.toString();
+}
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCustomIP;
     private javax.swing.JButton btnLocalhost;

@@ -51,30 +51,6 @@ setIconImage(img);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-if (!serverStarted &&
-    (serverIP.equals("localhost") || serverIP.equals("127.0.0.1"))) {
-
-    try {
-        String jarDir = new File(
-            FileServer.class
-                .getProtectionDomain()
-                .getCodeSource()
-                .getLocation()
-                .toURI()
-        ).getParent();
-
-        String serverFolder = jarDir + File.separator + "FileBottleServer";
-
-        System.out.println("SERVER ROOT: " + serverFolder);
-
-        new Thread(new FileServer(serverFolder)).start();
-
-        serverStarted = true;
-
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
         // ===== SIDEBAR =====
         JPanel leftPanel = new JPanel();leftPanel.setBackground(new Color(20, 24, 32));
         leftPanel.setPreferredSize(new Dimension(230, 650));
@@ -132,6 +108,7 @@ btnLogout.addActionListener(e -> {
 
     if (confirm == JOptionPane.YES_OPTION) {
         logActivity("Logged Out", "-");
+         notifyServerLogout();
         new LoginRegister(serverIP).setVisible(true);
         dispose();
     }
@@ -1762,5 +1739,19 @@ private JPanel createEditPasswordPanel() {
     });
 
     return panel;
+}
+private void notifyServerLogout() {
+    try {
+        Socket socket = new Socket(serverIP, 5000);
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+
+        out.writeUTF("LOGOUT_NOTIFY");
+        in.readUTF();
+
+        socket.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 }
 }

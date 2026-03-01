@@ -12,6 +12,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import javax.swing.JOptionPane;
 public class LoginRegister extends javax.swing.JFrame {
 boolean isLogin = true;
@@ -283,7 +286,7 @@ setupPlaceholders();
     java.sql.ResultSet rs = pst.executeQuery();
 
     if (rs.next()) {
-
+        notifyServerLogin();
     int id = rs.getInt("user_id");
 
     
@@ -382,6 +385,20 @@ private void logLoginActivity(int userId) {
 
     } catch (Exception e) {
         System.out.println("Login log failed");
+    }
+}
+private void notifyServerLogin() {
+    try {
+        Socket socket = new Socket(serverIP, 5000);
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+        DataInputStream in = new DataInputStream(socket.getInputStream());
+
+        out.writeUTF("LOGIN_NOTIFY");
+        in.readUTF(); // wait for OK
+
+        socket.close();
+    } catch (Exception e) {
+        e.printStackTrace();
     }
 }
     // Variables declaration - do not modify//GEN-BEGIN:variables
