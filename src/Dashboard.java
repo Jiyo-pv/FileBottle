@@ -27,6 +27,8 @@ private JTable fileTable;
 private DefaultTableModel tableModel;
 private JTable trashTable;
 private DefaultTableModel trashModel;
+private DefaultTableModel sharedModel;
+private DefaultTableModel activityModel;
 private String username;
     public Dashboard(int userId,String serverIP) {
        
@@ -52,72 +54,70 @@ setIconImage(img);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         // ===== SIDEBAR =====
-        JPanel leftPanel = new JPanel();leftPanel.setBackground(new Color(20, 24, 32));
-        leftPanel.setPreferredSize(new Dimension(230, 650));
+        JPanel leftPanel = new JPanel();
+        leftPanel.setBackground(ModernPalette.SIDEBAR_BG);
+        leftPanel.setPreferredSize(new Dimension(250, 650));
         leftPanel.setLayout(new BorderLayout());
-JPanel logoPanel = new JPanel();
-logoPanel.setBackground(new Color(28, 31, 38));
-logoPanel.setLayout(new BoxLayout(logoPanel, BoxLayout.Y_AXIS));
-logoPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-// App Name
-JLabel logo = new JLabel("FileBottle");
-logo.setForeground(Color.WHITE);
-logo.setFont(new Font("Segoe UI", Font.BOLD, 22));
-logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel logoPanel = new JPanel();
+        logoPanel.setOpaque(false);
+        logoPanel.setLayout(new BoxLayout(logoPanel, BoxLayout.Y_AXIS));
+        logoPanel.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
 
-// Username (clean + bold)
-JLabel nameLabel = new JLabel(username);
-nameLabel.setForeground(new Color(180, 190, 210));  // soft grey-blue
-nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
-nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // App Name
+        JLabel logo = new JLabel("FileBottle");
+        logo.setForeground(Color.WHITE);
+        logo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        logo.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-// Add spacing
-logoPanel.add(logo);
-logoPanel.add(Box.createVerticalStrut(10));
-logoPanel.add(nameLabel);
+        // Username
+        JLabel nameLabel = new JLabel("Welcome, " + username);
+        nameLabel.setForeground(ModernPalette.TEXT_LIGHT);
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-leftPanel.add(logoPanel, BorderLayout.NORTH);
+        logoPanel.add(logo);
+        logoPanel.add(Box.createVerticalStrut(5));
+        logoPanel.add(nameLabel);
+
+        leftPanel.add(logoPanel, BorderLayout.NORTH);
+
         // Menu Section
         JPanel menuPanel = new JPanel();
-        menuPanel.setBackground(new Color(28, 31, 38));
-        menuPanel.setLayout(new GridLayout(8, 1, 0, 8));
-        menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+        menuPanel.setOpaque(false);
+        menuPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 10));
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         btnFiles = createNavButton("Your Files");
-        btnShared = createNavButton("Shared");
-        btnTrash = createNavButton("Trash");
-        btnActivity = createNavButton("Activity");
-        btnEditPass = createNavButton("Edit Password");
+        btnShared = createNavButton("Shared Items");
+        btnTrash = createNavButton("Trash Bin");
+        btnActivity = createNavButton("Recent Activity");
+        btnEditPass = createNavButton("Security Settings");
+        JButton btnLogout = createNavButton("Sign Out");
 
         menuPanel.add(btnFiles);
         menuPanel.add(btnShared);
         menuPanel.add(btnTrash);
         menuPanel.add(btnActivity);
         menuPanel.add(btnEditPass);
-        JButton btnLogout = createNavButton("Logout");
-menuPanel.add(btnLogout);
-btnLogout.addActionListener(e -> {
+        menuPanel.add(Box.createVerticalStrut(50));
+        menuPanel.add(btnLogout);
 
-    int confirm = JOptionPane.showConfirmDialog(
-            this,
-            "Are you sure you want to logout?",
-            "Logout",
-            JOptionPane.YES_NO_OPTION
-    );
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to sign out?",
+                    "Sign Out",
+                    JOptionPane.YES_NO_OPTION
+            );
+            if (confirm == JOptionPane.YES_OPTION) {
+                logActivity("Logged Out", "-");
+                notifyServerLogout();
+                new LoginRegister(serverIP).setVisible(true);
+                dispose();
+            }
+        });
 
-    if (confirm == JOptionPane.YES_OPTION) {
-        logActivity("Logged Out", "-");
-         notifyServerLogout();
-        new LoginRegister(serverIP).setVisible(true);
-        dispose();
-    }
-});
-btnActivity.addActionListener(e -> {
-    contentPanel.add(createActivityPanel(), "activity");
-    cardLayout.show(contentPanel, "activity");
-    setActiveButton(btnActivity);
-});
         leftPanel.add(menuPanel, BorderLayout.CENTER);
 
         // ===== CONTENT AREA =====
@@ -133,22 +133,25 @@ btnActivity.addActionListener(e -> {
 
         // ===== BUTTON ACTIONS =====
         btnFiles.addActionListener(e -> {
+            loadUserFiles();
             cardLayout.show(contentPanel, "files");
             setActiveButton(btnFiles);
         });
 
         btnShared.addActionListener(e -> {
-   
-    cardLayout.show(contentPanel, "shared");
-    setActiveButton(btnShared);
-});
+            loadSharedFiles();
+            cardLayout.show(contentPanel, "shared");
+            setActiveButton(btnShared);
+        });
 
         btnTrash.addActionListener(e -> {
+            loadTrashFiles();
             cardLayout.show(contentPanel, "trash");
             setActiveButton(btnTrash);
         });
 
         btnActivity.addActionListener(e -> {
+            loadActivityData();
             cardLayout.show(contentPanel, "activity");
             setActiveButton(btnActivity);
         });
@@ -162,106 +165,170 @@ btnActivity.addActionListener(e -> {
         add(contentPanel, BorderLayout.CENTER);
 
         // Default selection
+        loadUserFiles();
         setActiveButton(btnFiles);
     }
 
     // ===== CREATE NAV BUTTON =====
     private JButton createNavButton(String text) {
+        return new JButton(text) {
+            private float alpha = 0f;
+            private Timer timer;
 
-        JButton btn = new JButton(text);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setHorizontalAlignment(SwingConstants.LEFT);
-        btn.setBackground(new Color(30, 36, 48));
-        btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        btn.setPreferredSize(new Dimension(200, 45));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            {
+                setFocusPainted(false);
+                setBorderPainted(false);
+                setContentAreaFilled(false);
+                setHorizontalAlignment(SwingConstants.LEFT);
+                setForeground(ModernPalette.TEXT_LIGHT);
+                setFont(ModernPalette.NAV_FONT);
+                setPreferredSize(new Dimension(220, 50));
+                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
 
-        return btn;
+                addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseEntered(java.awt.event.MouseEvent evt) {
+                        startAnimation(true);
+                    }
+
+                    @Override
+                    public void mouseExited(java.awt.event.MouseEvent evt) {
+                        if (getBackground() != ModernPalette.SIDEBAR_ACTIVE) {
+                            startAnimation(false);
+                        }
+                    }
+                });
+            }
+
+            private void startAnimation(boolean forward) {
+                if (timer != null && timer.isRunning()) timer.stop();
+                timer = new Timer(20, e -> {
+                    if (forward) {
+                        alpha += 0.1f;
+                        if (alpha >= 1f) { alpha = 1f; timer.stop(); }
+                    } else {
+                        alpha -= 0.1f;
+                        if (alpha <= 0f) { alpha = 0f; timer.stop(); }
+                    }
+                    repaint();
+                });
+                timer.start();
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (getBackground() == ModernPalette.SIDEBAR_ACTIVE) {
+                    g2.setColor(ModernPalette.SIDEBAR_ACTIVE);
+                    g2.fillRoundRect(5, 5, getWidth() - 10, getHeight() - 10, 10, 10);
+                    setForeground(Color.WHITE);
+                } else if (alpha > 0) {
+                    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+                    g2.setColor(ModernPalette.SIDEBAR_HOVER);
+                    g2.fillRoundRect(5, 5, getWidth() - 10, getHeight() - 10, 10, 10);
+                    setForeground(Color.WHITE);
+                } else {
+                    setForeground(ModernPalette.TEXT_LIGHT);
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
     }
 private JPanel createYourFilesPanel() {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.setBackground(ModernPalette.CONTENT_BG);
 
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBackground(new Color(245, 245, 245));
+    JPanel header = createModernHeader("Your Files", "Manage and access your uploaded documents");
+    mainPanel.add(header, BorderLayout.NORTH);
 
-    // Top bar with buttons
-    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    topPanel.setBackground(new Color(245, 245, 245));
+    JPanel content = new JPanel(new BorderLayout());
+    content.setOpaque(false);
+    content.setBorder(BorderFactory.createEmptyBorder(0, 30, 30, 30));
 
-    JButton btnUpload = new JButton("Upload");
+    // Toolbar
+    JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+    toolbar.setOpaque(false);
+
+    JButton btnUpload = new JButton("Upload New");
     styleActionButton(btnUpload);
+    JButton btnView = new JButton("View");
+    styleActionButton(btnView);
+    JButton btnDownload = new JButton("Download");
+    styleActionButton(btnDownload);
+    JButton btnRename = new JButton("Rename");
+    styleActionButton(btnRename);
+    JButton btnShare = new JButton("Share");
+    styleActionButton(btnShare);
+    JButton btnManageShare = new JButton("Manage Shares");
+    styleActionButton(btnManageShare);
     JButton btnDelete = new JButton("Move to Trash");
     styleActionButton(btnDelete);
     JButton btnRefresh = new JButton("Refresh");
     styleActionButton(btnRefresh);
-JButton btnView = new JButton("View");
-styleActionButton(btnView);
-JButton btnDownload = new JButton("Download");
-styleActionButton(btnDownload);
- topPanel.add(btnUpload);
- 
-    topPanel.add(btnView);
-    topPanel.add(btnDownload);
-    JButton btnRename = new JButton("Rename");
-    styleActionButton(btnRename);
-topPanel.add(btnRename);
-JButton btnShare = new JButton("Share");
-styleActionButton(btnShare);
-topPanel.add(btnShare);
-btnShare.addActionListener(e -> shareFile());
-JButton btnManageShare = new JButton("Manage Shares");
-styleActionButton(btnManageShare);
-topPanel.add(btnManageShare);
-btnManageShare.addActionListener(e -> manageShares());
-btnRename.addActionListener(e -> renameFile());
-    topPanel.add(btnDelete);
-    topPanel.add(btnRefresh);
 
-btnDownload.addActionListener(e -> downloadFile());
+    toolbar.add(btnUpload);
+    toolbar.add(btnView);
+    toolbar.add(btnDownload);
+    toolbar.add(btnRename);
+    toolbar.add(btnShare);
+    toolbar.add(btnManageShare);
+    toolbar.add(btnDelete);
+    toolbar.add(btnRefresh);
 
-
-btnView.addActionListener(e -> viewFile());
-   
-
-    panel.add(topPanel, BorderLayout.NORTH);
+    content.add(toolbar, BorderLayout.NORTH);
 
     // Table
     String[] columns = {"File ID", "Filename", "Type", "Size (KB)", "Created On"};
-tableModel = new DefaultTableModel(columns, 0) {
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        return false;
-    }
-};
+    tableModel = new DefaultTableModel(columns, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
     fileTable = new JTable(tableModel);
-fileTable.setRowHeight(30);
-fileTable.setShowGrid(false);
-fileTable.setIntercellSpacing(new Dimension(0, 0));
-fileTable.setSelectionBackground(new Color(41,121,255));
-fileTable.setSelectionForeground(Color.WHITE);
-fileTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-fileTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-fileTable.getTableHeader().setReorderingAllowed(false);
-    JScrollPane scrollPane = new JScrollPane(fileTable);
-    panel.add(scrollPane, BorderLayout.CENTER);
+    modernizeTable(fileTable);
+    
+    JPanel tableWrapper = createRoundedTablePanel(fileTable);
+    content.add(tableWrapper, BorderLayout.CENTER);
 
-    // Button Actions
+    mainPanel.add(content, BorderLayout.CENTER);
+
+    // Actions
     btnUpload.addActionListener(e -> uploadFile());
+    btnView.addActionListener(e -> viewFile());
+    btnDownload.addActionListener(e -> downloadFile());
+    btnRename.addActionListener(e -> renameFile());
+    btnShare.addActionListener(e -> shareFile());
+    btnManageShare.addActionListener(e -> manageShares());
     btnDelete.addActionListener(e -> moveToTrash());
     btnRefresh.addActionListener(e -> loadUserFiles());
 
     loadUserFiles();
-
-    return panel;
+    return mainPanel;
 }
 private void styleActionButton(JButton btn) {
     btn.setFocusPainted(false);
     btn.setBorderPainted(false);
-    btn.setBackground(new Color(41,121,255));
+    btn.setContentAreaFilled(false);
+    btn.setOpaque(true);
+    btn.setBackground(ModernPalette.ACCENT_COLOR);
     btn.setForeground(Color.WHITE);
-    btn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+    btn.setFont(ModernPalette.BODY_FONT);
     btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    btn.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+    btn.addMouseListener(new java.awt.event.MouseAdapter() {
+        public void mouseEntered(java.awt.event.MouseEvent evt) {
+            btn.setBackground(ModernPalette.ACCENT_COLOR.brighter());
+        }
+        public void mouseExited(java.awt.event.MouseEvent evt) {
+            btn.setBackground(ModernPalette.ACCENT_COLOR);
+        }
+    });
 }
 private void viewFile() {
 
@@ -399,13 +466,20 @@ private void openInternalViewer(File tempFile,
                                 boolean canEdit,
                                 int ownerId) {
 
-    JFrame viewer = new JFrame("Viewing: " + filename);
-    viewer.setSize(900, 650);
+    JFrame viewer = new JFrame("File Viewer - " + filename);
+    viewer.setSize(1000, 750);
     viewer.setLocationRelativeTo(this);
     viewer.setLayout(new BorderLayout());
+    viewer.getContentPane().setBackground(ModernPalette.CONTENT_BG);
+
+    JPanel header = createModernHeader(filename, filetype.toUpperCase() + " File");
+    viewer.add(header, BorderLayout.NORTH);
+
+    JPanel contentPanel = new JPanel(new BorderLayout());
+    contentPanel.setOpaque(false);
+    contentPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 30, 30));
 
     try {
-
         // ================= IMAGE =================
         if (filetype.equalsIgnoreCase("jpg") ||
             filetype.equalsIgnoreCase("png") ||
@@ -413,16 +487,16 @@ private void openInternalViewer(File tempFile,
             filetype.equalsIgnoreCase("gif") ||
             filetype.equalsIgnoreCase("bmp")) {
 
-            ImageIcon icon =
-                new ImageIcon(tempFile.getAbsolutePath());
-
+            ImageIcon icon = new ImageIcon(tempFile.getAbsolutePath());
             JLabel imageLabel = new JLabel(icon);
-            imageLabel.setHorizontalAlignment(
-                SwingConstants.CENTER);
-
-            viewer.add(new JScrollPane(imageLabel),
-                       BorderLayout.CENTER);
-
+            imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            
+            RoundedPanel wrapper = new RoundedPanel(15, Color.WHITE);
+            wrapper.setLayout(new BorderLayout());
+            wrapper.add(new JScrollPane(imageLabel), BorderLayout.CENTER);
+            
+            contentPanel.add(wrapper, BorderLayout.CENTER);
+            viewer.add(contentPanel, BorderLayout.CENTER);
             viewer.setVisible(true);
             return;
         }
@@ -430,117 +504,80 @@ private void openInternalViewer(File tempFile,
         // ================= PDF =================
         if (filetype.equalsIgnoreCase("pdf")) {
             Desktop.getDesktop().open(tempFile);
+            viewer.dispose();
             return;
         }
 
         // ================= TEXT =================
-        byte[] fileBytes =
-            java.nio.file.Files.readAllBytes(tempFile.toPath());
-
-        String originalContent =
-            new String(fileBytes,
-                java.nio.charset.StandardCharsets.UTF_8);
+        byte[] fileBytes = java.nio.file.Files.readAllBytes(tempFile.toPath());
+        String originalContent = new String(fileBytes, java.nio.charset.StandardCharsets.UTF_8);
 
         if (originalContent.contains("\0")) {
-
-            JLabel msg = new JLabel(
-                "Preview not supported for binary files.");
-            msg.setHorizontalAlignment(
-                SwingConstants.CENTER);
-
-            viewer.add(msg);
+            JLabel msg = new JLabel("Preview not supported for binary files.");
+            msg.setFont(ModernPalette.SUBTITLE_FONT);
+            msg.setHorizontalAlignment(SwingConstants.CENTER);
+            contentPanel.add(msg, BorderLayout.CENTER);
+            viewer.add(contentPanel, BorderLayout.CENTER);
             viewer.setVisible(true);
             return;
         }
 
-        JTextArea textArea =
-            new JTextArea(originalContent);
+        JTextArea textArea = new JTextArea(originalContent);
+        textArea.setFont(new Font("Consolas", Font.PLAIN, 14));
+        textArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        textArea.setFont(
-            new Font("Consolas", Font.PLAIN, 14));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setBorder(null);
 
-        JScrollPane scrollPane =
-            new JScrollPane(textArea);
+        RoundedPanel textWrapper = new RoundedPanel(15, Color.WHITE);
+        textWrapper.setLayout(new BorderLayout());
+        textWrapper.add(scrollPane, BorderLayout.CENTER);
+        contentPanel.add(textWrapper, BorderLayout.CENTER);
 
-        JButton btnSave = new JButton("Save");
+        JButton btnSave = new JButton("Save Changes");
+        styleActionButton(btnSave);
         btnSave.setEnabled(false);
 
-        // 🔥 Permission control
         if (!canEdit) {
             btnSave.setVisible(false);
         }
 
-        textArea.getDocument().addDocumentListener(
-            new javax.swing.event.DocumentListener() {
-
-                private void checkChange() {
-                    if (canEdit) {
-                        btnSave.setEnabled(
-                            !textArea.getText()
-                             .equals(originalContent));
-                    }
+        textArea.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void checkChange() {
+                if (canEdit) {
+                    btnSave.setEnabled(!textArea.getText().equals(originalContent));
                 }
-
-                public void insertUpdate(
-                    javax.swing.event.DocumentEvent e)
-                    { checkChange(); }
-
-                public void removeUpdate(
-                    javax.swing.event.DocumentEvent e)
-                    { checkChange(); }
-
-                public void changedUpdate(
-                    javax.swing.event.DocumentEvent e)
-                    { checkChange(); }
-            });
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { checkChange(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { checkChange(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { checkChange(); }
+        });
 
         btnSave.addActionListener(e -> {
-
             try {
-
-                // Save locally first
-                java.nio.file.Files.write(
-                    tempFile.toPath(),
-                    textArea.getText().getBytes(
-                        java.nio.charset.StandardCharsets.UTF_8)
-                );
-
-                // 🔥 Send updated file back to OWNER folder
+                java.nio.file.Files.write(tempFile.toPath(), 
+                    textArea.getText().getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 sendFileToServer(tempFile, filename, ownerId);
-
                 logActivity("Edited File", filename);
-               String editorName = getUsernameById(userId);
-
-logOwnerActivity(ownerId,
-        editorName + " edited",
-        filename);
-                JOptionPane.showMessageDialog(
-                    viewer,
-                    "Saved to server successfully!");
-
+                String editorName = getUsernameById(userId);
+                logOwnerActivity(ownerId, editorName + " edited", filename);
+                JOptionPane.showMessageDialog(viewer, "Saved to server successfully!");
                 viewer.dispose();
-
             } catch (Exception ex) {
-
-                JOptionPane.showMessageDialog(
-                    viewer,
-                    "Save Error: " + ex.getMessage());
+                JOptionPane.showMessageDialog(viewer, "Save Error: " + ex.getMessage());
             }
         });
 
-        JPanel bottomPanel =
-            new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomPanel.setOpaque(false);
         bottomPanel.add(btnSave);
 
-        viewer.add(scrollPane, BorderLayout.CENTER);
+        viewer.add(contentPanel, BorderLayout.CENTER);
         viewer.add(bottomPanel, BorderLayout.SOUTH);
-
         viewer.setVisible(true);
 
     } catch (Exception ex) {
-
-        JOptionPane.showMessageDialog(this,
-            "Viewer Error: " + ex.getMessage());
+        JOptionPane.showMessageDialog(this, "Viewer Error: " + ex.getMessage());
     }
 }
 private void loadUserFiles() {
@@ -659,52 +696,53 @@ private String getFileExtension(String name) {
     return "unknown";
 }
 private JPanel createTrashPanel() {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.setBackground(ModernPalette.CONTENT_BG);
 
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBackground(new Color(245,245,245));
+    JPanel header = createModernHeader("Trash Bin", "Recover or permanently delete your files");
+    mainPanel.add(header, BorderLayout.NORTH);
 
-    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    topPanel.setBackground(new Color(245,245,245));
+    JPanel content = new JPanel(new BorderLayout());
+    content.setOpaque(false);
+    content.setBorder(BorderFactory.createEmptyBorder(0, 30, 30, 30));
 
-    JButton btnRestore = new JButton("Restore");
-    JButton btnDeletePermanent = new JButton("Delete Permanently");
+    // Toolbar
+    JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+    toolbar.setOpaque(false);
+
+    JButton btnRestore = new JButton("Restore File");
+    styleActionButton(btnRestore);
+    JButton btnDeletePermanent = new JButton("Empty Trash");
+    styleActionButton(btnDeletePermanent);
     JButton btnRefresh = new JButton("Refresh");
     styleActionButton(btnRefresh);
-    styleActionButton(btnRestore);
-    styleActionButton(btnDeletePermanent);
-    topPanel.add(btnRestore);
-    topPanel.add(btnDeletePermanent);
-    topPanel.add(btnRefresh);
 
-    panel.add(topPanel, BorderLayout.NORTH);
+    toolbar.add(btnRestore);
+    toolbar.add(btnDeletePermanent);
+    toolbar.add(btnRefresh);
+    content.add(toolbar, BorderLayout.NORTH);
 
+    // Table
     String[] columns = {"File ID", "Filename", "Type", "Size (KB)", "Deleted On"};
     trashModel = new DefaultTableModel(columns, 0) {
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        return false;
-    }
-};
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
     trashTable = new JTable(trashModel);
-    trashTable.setRowHeight(30);
-trashTable.setShowGrid(false);
-trashTable.setIntercellSpacing(new Dimension(0, 0));
-trashTable.setSelectionBackground(new Color(41,121,255));
-trashTable.setSelectionForeground(Color.WHITE);
-trashTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-trashTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-trashTable.getTableHeader().setReorderingAllowed(false);
-
-    JScrollPane scrollPane = new JScrollPane(trashTable);
-    panel.add(scrollPane, BorderLayout.CENTER);
+    modernizeTable(trashTable);
+    
+    JPanel tableWrapper = createRoundedTablePanel(trashTable);
+    content.add(tableWrapper, BorderLayout.CENTER);
+    mainPanel.add(content, BorderLayout.CENTER);
 
     btnRestore.addActionListener(e -> restoreFile());
     btnDeletePermanent.addActionListener(e -> deleteFilePermanent());
     btnRefresh.addActionListener(e -> loadTrashFiles());
 
     loadTrashFiles();
-
-    return panel;
+    return mainPanel;
 }
 private void loadTrashFiles() {
 
@@ -890,102 +928,103 @@ private void moveToTrash() {
 }
     // ===== ACTIVE BUTTON HIGHLIGHT =====
     private void setActiveButton(JButton active) {
-
         JButton[] buttons = {btnFiles, btnShared, btnTrash, btnActivity, btnEditPass};
-
         for (JButton btn : buttons) {
-            btn.setBackground(new Color(45, 49, 58));
+            if (btn == active) {
+                btn.setOpaque(true);
+                btn.setContentAreaFilled(true);
+                btn.setBackground(ModernPalette.SIDEBAR_ACTIVE);
+                btn.setForeground(Color.WHITE);
+            } else {
+                btn.setOpaque(false);
+                btn.setContentAreaFilled(false);
+                btn.setForeground(ModernPalette.TEXT_LIGHT);
+                btn.setBackground(ModernPalette.SIDEBAR_BG);
+            }
         }
-
-        active.setBackground(new Color(70, 130, 180)); // Highlight color
     }
 
-    // ===== CONTENT LABEL TEMPLATE =====
-    private JPanel createContentLabel(String text) {
-
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(245, 245, 245));
-
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-
-        panel.add(label, BorderLayout.CENTER);
-
-        return panel;
-    }
     private void logActivity(String action, String filename) {
+        try {
+            Connection con = DBConnection.getConnection(serverIP);
+            String sql = "INSERT INTO activity_log " +
+                         "(log_id, user_id, action, filename, action_time) " +
+                         "VALUES (activity_seq.NEXTVAL, ?, ?, ?, SYSDATE)";
 
+            PreparedStatement pst = con.prepareStatement(sql);
+            pst.setInt(1, userId);
+            pst.setString(2, action);
+            pst.setString(3, filename);
+
+            pst.executeUpdate();
+            con.close();
+            
+            // 🔥 Refresh the Activity panel if it has been initialized
+            loadActivityData();
+        } catch (Exception e) {
+            System.out.println("Logging failed: " + e.getMessage());
+        }
+    }
+private void loadActivityData() {
+    if (activityModel == null) return;
+    activityModel.setRowCount(0);
     try {
         Connection con = DBConnection.getConnection(serverIP);
-
-        String sql = "INSERT INTO activity_log " +
-                     "(log_id, user_id, action, filename, action_time) " +
-                     "VALUES (activity_seq.NEXTVAL, ?, ?, ?, SYSDATE)";
-
+        String sql = "SELECT action, filename, action_time FROM activity_log WHERE user_id=? ORDER BY action_time DESC";
         PreparedStatement pst = con.prepareStatement(sql);
         pst.setInt(1, userId);
-        pst.setString(2, action);
-        pst.setString(3, filename);
-
-        pst.executeUpdate();
-        con.close();
-
-    } catch (Exception e) {
-        System.out.println("Logging failed: " + e.getMessage());
-    }
-}
-private JPanel createActivityPanel() {
-
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBackground(new Color(245,245,245));
-
-    String[] columns = {"Action", "Filename", "Time"};
-    DefaultTableModel model = new DefaultTableModel(columns, 0) {
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        return false;
-    }
-};
-    JTable table = new JTable(model);
-table.setRowHeight(30);
-table.setShowGrid(false);
-table.setIntercellSpacing(new Dimension(0, 0));
-table.setSelectionBackground(new Color(41,121,255));
-table.setSelectionForeground(Color.WHITE);
-table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-table.getTableHeader().setReorderingAllowed(false);
-    try {
-        Connection con = DBConnection.getConnection(serverIP);
-
-        String sql = "SELECT action, filename, action_time " +
-                     "FROM activity_log WHERE user_id=? " +
-                     "ORDER BY action_time DESC";
-
-        PreparedStatement pst = con.prepareStatement(sql);
-        pst.setInt(1, userId);
-
         ResultSet rs = pst.executeQuery();
 
         while (rs.next()) {
-            model.addRow(new Object[]{
+            activityModel.addRow(new Object[]{
                 rs.getString("action"),
                 rs.getString("filename"),
                 rs.getTimestamp("action_time")
             });
         }
-
         con.close();
-
     } catch (Exception e) {
-        JOptionPane.showMessageDialog(this,
-                "Activity Load Error: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "Activity Load Error: " + e.getMessage());
     }
+}
 
-    panel.add(new JScrollPane(table), BorderLayout.CENTER);
+private JPanel createActivityPanel() {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.setBackground(ModernPalette.CONTENT_BG);
 
-    return panel;
+    JPanel header = createModernHeader("Recent Activity", "Monitor all file operations and account changes");
+    mainPanel.add(header, BorderLayout.NORTH);
+
+    JPanel content = new JPanel(new BorderLayout());
+    content.setOpaque(false);
+    content.setBorder(BorderFactory.createEmptyBorder(0, 30, 30, 30));
+
+    // Toolbar
+    JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+    toolbar.setOpaque(false);
+    JButton btnRefresh = new JButton("Refresh");
+    styleActionButton(btnRefresh);
+    toolbar.add(btnRefresh);
+    content.add(toolbar, BorderLayout.NORTH);
+
+    String[] columns = {"Action", "Filename", "Time"};
+    activityModel = new DefaultTableModel(columns, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+    JTable table = new JTable(activityModel);
+    modernizeTable(table);
+    
+    JPanel tableWrapper = createRoundedTablePanel(table);
+    content.add(tableWrapper, BorderLayout.CENTER);
+    mainPanel.add(content, BorderLayout.CENTER);
+
+    btnRefresh.addActionListener(e -> loadActivityData());
+
+    loadActivityData();
+    return mainPanel;
 }
 private void sendFileToServer(File file,
                               String filename,
@@ -1167,21 +1206,28 @@ private void shareFile() {
 
         JComboBox<String> userDropdown =
                 new JComboBox<>(comboModel);
+        userDropdown.setFont(ModernPalette.BODY_FONT);
 
         JCheckBox downloadBox = new JCheckBox("Allow Download");
-        JCheckBox editBox = new JCheckBox("Allow Edit");
+        downloadBox.setFont(ModernPalette.BODY_FONT);
+        downloadBox.setOpaque(false);
 
-        Object[] message = {
-                "Select User:",
-                userDropdown,
-                "Permissions:",
-                downloadBox,
-                editBox
-        };
+        JCheckBox editBox = new JCheckBox("Allow Edit");
+        editBox.setFont(ModernPalette.BODY_FONT);
+        editBox.setOpaque(false);
+
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+        panel.setOpaque(false);
+        panel.add(new JLabel("Select User:"));
+        panel.add(userDropdown);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(new JLabel("Permissions:"));
+        panel.add(downloadBox);
+        panel.add(editBox);
 
         int option = JOptionPane.showConfirmDialog(
                 this,
-                message,
+                panel,
                 "Share File",
                 JOptionPane.OK_CANCEL_OPTION
         );
@@ -1220,127 +1266,111 @@ private void shareFile() {
                 "Share Error: " + ex.getMessage());
     }
 }
-private JPanel createSharedPanel() {
-
-    JPanel panel = new JPanel(new BorderLayout());
-
-   String[] columns = {
-    "File ID",
-    "Filename",
-    "Shared By",
-    "Owner ID",
-    "Download",
-    "Edit"
-};
-DefaultTableModel model = new DefaultTableModel(columns, 0) {
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        return false;
-    }
-};
-
-    JTable table = new JTable(model);
-table.setRowHeight(30);
-table.setShowGrid(false);
-table.setIntercellSpacing(new Dimension(0, 0));
-table.setSelectionBackground(new Color(41,121,255));
-table.setSelectionForeground(Color.WHITE);
-table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-table.getTableHeader().setReorderingAllowed(false);
-    JButton btnView = new JButton("View");
-    styleActionButton(btnView);
-    JButton btnDownload = new JButton("Download");
-    styleActionButton(btnDownload);
-    JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    topPanel.add(btnView);
-    topPanel.add(btnDownload);
-
-    panel.add(topPanel, BorderLayout.NORTH);
-    panel.add(new JScrollPane(table), BorderLayout.CENTER);
-
+private void loadSharedFiles() {
+    if (sharedModel == null) return;
+    sharedModel.setRowCount(0);
     try {
-
         Connection con = DBConnection.getConnection(serverIP);
-
         String sql =
-            "SELECT f.file_id,\n" +
-"       f.filename,\n" +
-"       u.username AS owner_name,\n" +
-"       s.owner_id,\n" +
-"       s.can_download,\n" +
-"       s.can_edit\n" +
-"FROM files f\n" +
-"JOIN file_shares s ON f.file_id = s.file_id\n" +
-"JOIN users u ON s.owner_id = u.user_id\n" +
-"WHERE s.shared_with=? AND f.status='ACTIVE'";
+            "SELECT f.file_id, f.filename, u.username AS owner_name, s.owner_id, s.can_download, s.can_edit " +
+            "FROM files f JOIN file_shares s ON f.file_id = s.file_id " +
+            "JOIN users u ON s.owner_id = u.user_id " +
+            "WHERE s.shared_with=? AND f.status='ACTIVE'";
 
         PreparedStatement pst = con.prepareStatement(sql);
         pst.setInt(1, userId);
-
         ResultSet rs = pst.executeQuery();
 
         while (rs.next()) {
-
-           model.addRow(new Object[]{
-    rs.getInt("file_id"),
-    rs.getString("filename"),
-    rs.getString("owner_name"),
-    rs.getInt("owner_id"),
-    rs.getInt("can_download") == 1 ? "Yes" : "No",
-    rs.getInt("can_edit") == 1 ? "Yes" : "No"
-});
+            sharedModel.addRow(new Object[]{
+                rs.getInt("file_id"),
+                rs.getString("filename"),
+                rs.getString("owner_name"),
+                rs.getInt("owner_id"),
+                rs.getInt("can_download") == 1 ? "Yes" : "No",
+                rs.getInt("can_edit") == 1 ? "Yes" : "No"
+            });
         }
-
         con.close();
-
     } catch (Exception e) {
-        JOptionPane.showMessageDialog(this,
-                "Shared Load Error: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "Shared Load Error: " + e.getMessage());
     }
+}
 
-    // ===== VIEW BUTTON =====
+private JPanel createSharedPanel() {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.setBackground(ModernPalette.CONTENT_BG);
+
+    JPanel header = createModernHeader("Shared Items", "Files shared with you by other users");
+    mainPanel.add(header, BorderLayout.NORTH);
+
+    JPanel content = new JPanel(new BorderLayout());
+    content.setOpaque(false);
+    content.setBorder(BorderFactory.createEmptyBorder(0, 30, 30, 30));
+
+    // Toolbar
+    JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+    toolbar.setOpaque(false);
+
+    JButton btnView = new JButton("View Shared");
+    styleActionButton(btnView);
+    JButton btnDownload = new JButton("Download Copy");
+    styleActionButton(btnDownload);
+    JButton btnRefresh = new JButton("Refresh");
+    styleActionButton(btnRefresh);
+
+    toolbar.add(btnView);
+    toolbar.add(btnDownload);
+    toolbar.add(btnRefresh);
+    content.add(toolbar, BorderLayout.NORTH);
+
+    // Table
+    String[] columns = {"File ID", "Filename", "Shared By", "Owner ID", "Download", "Edit"};
+    sharedModel = new DefaultTableModel(columns, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+
+    JTable table = new JTable(sharedModel);
+    modernizeTable(table);
+    
+    JPanel tableWrapper = createRoundedTablePanel(table);
+    content.add(tableWrapper, BorderLayout.CENTER);
+    mainPanel.add(content, BorderLayout.CENTER);
+
     btnView.addActionListener(e -> {
-
-    int row = table.getSelectedRow();
-    if (row == -1) {
-        JOptionPane.showMessageDialog(this, "Select file first");
-        return;
-    }
-
-    String filename = (String) model.getValueAt(row, 1);
-    int ownerId = (int) model.getValueAt(row, 3);
-
-    String editPermission = (String) model.getValueAt(row, 5);
-    boolean canEdit = editPermission.equals("Yes");
-
-    downloadAndOpenSharedFile(filename, ownerId, canEdit);
-});
-
-    // ===== DOWNLOAD BUTTON =====
-    btnDownload.addActionListener(e -> {
-
         int row = table.getSelectedRow();
         if (row == -1) {
             JOptionPane.showMessageDialog(this, "Select file first");
             return;
         }
+        String filename = (String) sharedModel.getValueAt(row, 1);
+        int ownerId = (int) sharedModel.getValueAt(row, 3);
+        boolean canEdit = sharedModel.getValueAt(row, 5).equals("Yes");
+        downloadAndOpenSharedFile(filename, ownerId, canEdit);
+    });
 
-        String permission = (String) model.getValueAt(row, 4);
-
-        if (permission.equals("No")) {
-            JOptionPane.showMessageDialog(this,
-                    "Download not allowed.");
+    btnDownload.addActionListener(e -> {
+        int row = table.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Select file first");
             return;
         }
-
-        String filename = (String) model.getValueAt(row, 1);
-        int ownerId = (int) model.getValueAt(row, 3);
-
+        if (sharedModel.getValueAt(row, 4).equals("No")) {
+            JOptionPane.showMessageDialog(this, "Download not allowed.");
+            return;
+        }
+        String filename = (String) sharedModel.getValueAt(row, 1);
+        int ownerId = (int) sharedModel.getValueAt(row, 3);
         downloadSharedFile(filename, ownerId);
     });
 
-    return panel;
+    btnRefresh.addActionListener(e -> loadSharedFiles());
+
+    loadSharedFiles();
+    return mainPanel;
 }
 private void downloadAndOpenSharedFile(String filename,
                                        int ownerId,
@@ -1508,10 +1538,16 @@ DefaultTableModel model =
         }
 
         JTable table = new JTable(model);
+        modernizeTable(table);
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(table), BorderLayout.CENTER);
+        panel.setPreferredSize(new Dimension(500, 300));
+        panel.setBackground(Color.WHITE);
 
         int option = JOptionPane.showConfirmDialog(
                 this,
-                new JScrollPane(table),
+                panel,
                 "Manage Shares",
                 JOptionPane.OK_CANCEL_OPTION
         );
@@ -1631,114 +1667,138 @@ private String getUsernameById(int id) {
     return username;
 }
 private JPanel createEditPasswordPanel() {
+    JPanel mainPanel = new JPanel(new BorderLayout());
+    mainPanel.setBackground(ModernPalette.CONTENT_BG);
 
-    JPanel panel = new JPanel();
-    panel.setLayout(new GridBagLayout());
-    panel.setBackground(new Color(248,249,252));
+    JPanel header = createModernHeader("Security Settings", "Update your account password and security preferences");
+    mainPanel.add(header, BorderLayout.NORTH);
+
+    JPanel cardWrapper = new JPanel(new GridBagLayout());
+    cardWrapper.setOpaque(false);
+
+    RoundedPanel card = new RoundedPanel(20, Color.WHITE);
+    card.setPreferredSize(new Dimension(450, 450));
+    card.setLayout(new GridBagLayout());
+    card.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
 
     GridBagConstraints gbc = new GridBagConstraints();
-    gbc.insets = new Insets(10,10,10,10);
+    gbc.insets = new Insets(10, 0, 10, 0);
     gbc.fill = GridBagConstraints.HORIZONTAL;
+    gbc.gridx = 0;
+    gbc.weightx = 1.0;
 
     JLabel lblTitle = new JLabel("Change Password");
-    lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
+    lblTitle.setFont(ModernPalette.SUBTITLE_FONT);
+    lblTitle.setForeground(ModernPalette.TEXT_PRIMARY);
+    gbc.gridy = 0;
+    card.add(lblTitle, gbc);
 
-    JPasswordField txtOld = new JPasswordField(15);
-    JPasswordField txtNew = new JPasswordField(15);
-    JPasswordField txtConfirm = new JPasswordField(15);
+    gbc.gridy++;
+    card.add(Box.createVerticalStrut(10), gbc);
+
+    JLabel lblOld = new JLabel("Current Password");
+    lblOld.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    lblOld.setForeground(ModernPalette.TEXT_SECONDARY);
+    gbc.gridy++;
+    card.add(lblOld, gbc);
+
+    JPasswordField txtOld = new JPasswordField();
+    txtOld.setPreferredSize(new Dimension(300, 40));
+    txtOld.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(0, 0, 1, 0, ModernPalette.BORDER_COLOR),
+        BorderFactory.createEmptyBorder(5, 0, 5, 0)
+    ));
+    gbc.gridy++;
+    card.add(txtOld, gbc);
+
+    JLabel lblNew = new JLabel("New Password");
+    lblNew.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    lblNew.setForeground(ModernPalette.TEXT_SECONDARY);
+    gbc.gridy++;
+    card.add(lblNew, gbc);
+
+    JPasswordField txtNew = new JPasswordField();
+    txtNew.setPreferredSize(new Dimension(300, 40));
+    txtNew.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(0, 0, 1, 0, ModernPalette.BORDER_COLOR),
+        BorderFactory.createEmptyBorder(5, 0, 5, 0)
+    ));
+    gbc.gridy++;
+    card.add(txtNew, gbc);
+
+    JLabel lblConfirm = new JLabel("Confirm New Password");
+    lblConfirm.setFont(new Font("Segoe UI", Font.BOLD, 12));
+    lblConfirm.setForeground(ModernPalette.TEXT_SECONDARY);
+    gbc.gridy++;
+    card.add(lblConfirm, gbc);
+
+    JPasswordField txtConfirm = new JPasswordField();
+    txtConfirm.setPreferredSize(new Dimension(300, 40));
+    txtConfirm.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(0, 0, 1, 0, ModernPalette.BORDER_COLOR),
+        BorderFactory.createEmptyBorder(5, 0, 5, 0)
+    ));
+    gbc.gridy++;
+    card.add(txtConfirm, gbc);
+
+    gbc.gridy++;
+    card.add(Box.createVerticalStrut(20), gbc);
 
     JButton btnSave = new JButton("Update Password");
     styleActionButton(btnSave);
-
-    gbc.gridx = 0;
-    gbc.gridy = 0;
-    panel.add(lblTitle, gbc);
-
     gbc.gridy++;
-    panel.add(new JLabel("Old Password"), gbc);
+    card.add(btnSave, gbc);
 
-    gbc.gridy++;
-    panel.add(txtOld, gbc);
-
-    gbc.gridy++;
-    panel.add(new JLabel("New Password"), gbc);
-
-    gbc.gridy++;
-    panel.add(txtNew, gbc);
-
-    gbc.gridy++;
-    panel.add(new JLabel("Confirm Password"), gbc);
-
-    gbc.gridy++;
-    panel.add(txtConfirm, gbc);
-
-    gbc.gridy++;
-    panel.add(btnSave, gbc);
+    cardWrapper.add(card);
+    mainPanel.add(cardWrapper, BorderLayout.CENTER);
 
     btnSave.addActionListener(e -> {
-
         String oldPass = new String(txtOld.getPassword());
         String newPass = new String(txtNew.getPassword());
         String confirmPass = new String(txtConfirm.getPassword());
 
         if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Fill all fields");
+            JOptionPane.showMessageDialog(this, "Please fill in all fields");
             return;
         }
 
         if (!newPass.equals(confirmPass)) {
-            JOptionPane.showMessageDialog(this, "Passwords do not match");
+            JOptionPane.showMessageDialog(this, "New passwords do not match");
             return;
         }
 
         try {
-
             Connection con = DBConnection.getConnection(serverIP);
-
-            String checkSql =
-                "SELECT * FROM users WHERE user_id=? AND password=?";
-
-            PreparedStatement pst =
-                con.prepareStatement(checkSql);
-
+            String checkSql = "SELECT * FROM users WHERE user_id=? AND password=?";
+            PreparedStatement pst = con.prepareStatement(checkSql);
             pst.setInt(1, userId);
-            pst.setString(2,Hasher.hashPassword(oldPass));
-
+            pst.setString(2, Hasher.hashPassword(oldPass));
             ResultSet rs = pst.executeQuery();
 
             if (!rs.next()) {
-                JOptionPane.showMessageDialog(this,
-                        "Old password incorrect");
+                JOptionPane.showMessageDialog(this, "Current password incorrect");
                 con.close();
                 return;
             }
 
-            String updateSql =
-                "UPDATE users SET password=? WHERE user_id=?";
-
-            PreparedStatement updatePst =
-                con.prepareStatement(updateSql);
-
+            String updateSql = "UPDATE users SET password=? WHERE user_id=?";
+            PreparedStatement updatePst = con.prepareStatement(updateSql);
             updatePst.setString(1, Hasher.hashPassword(newPass));
             updatePst.setInt(2, userId);
             updatePst.executeUpdate();
-
             con.close();
 
-            JOptionPane.showMessageDialog(this,
-                    "Password updated successfully");
+            JOptionPane.showMessageDialog(this, "Password updated successfully!");
             logActivity("Changed Password", "-");
             txtOld.setText("");
             txtNew.setText("");
             txtConfirm.setText("");
-
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
     });
 
-    return panel;
+    return mainPanel;
 }
 private void notifyServerLogout() {
     try {
@@ -1753,5 +1813,163 @@ private void notifyServerLogout() {
     } catch (Exception e) {
         e.printStackTrace();
     }
+}
+
+// ==========================================
+// MODERN UI COMPONENTS & STYLING
+// ==========================================
+
+public static class ModernPalette {
+    public static final Color SIDEBAR_BG = new Color(28, 31, 38);
+    public static final Color SIDEBAR_HOVER = new Color(40, 45, 55);
+    public static final Color SIDEBAR_ACTIVE = new Color(41, 121, 255);
+    public static final Color CONTENT_BG = new Color(248, 249, 252);
+    public static final Color ACCENT_COLOR = new Color(41, 121, 255);
+    public static final Color TEXT_PRIMARY = new Color(33, 37, 41);
+    public static final Color TEXT_SECONDARY = new Color(108, 117, 125);
+    public static final Color TEXT_LIGHT = new Color(180, 190, 210);
+    public static final Color CARD_BG = Color.WHITE;
+    public static final Color BORDER_COLOR = new Color(233, 236, 239);
+
+    public static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 22);
+    public static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.BOLD, 18);
+    public static final Font BODY_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font NAV_FONT = new Font("Segoe UI", Font.BOLD, 15);
+}
+
+public static class RoundedPanel extends JPanel {
+    private int radius;
+    private Color backgroundColor;
+
+    public RoundedPanel(int radius, Color bgColor) {
+        this.radius = radius;
+        this.backgroundColor = bgColor;
+        setOpaque(false);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Dimension arcs = new Dimension(radius, radius);
+        int width = getWidth();
+        int height = getHeight();
+        Graphics2D graphics = (Graphics2D) g;
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        if (backgroundColor != null) {
+            graphics.setColor(backgroundColor);
+        } else {
+            graphics.setColor(getBackground());
+        }
+        graphics.fillRoundRect(0, 0, width - 1, height - 1, arcs.width, arcs.height);
+    }
+}
+
+public static class ModernButton extends JButton {
+    private float alpha = 0f;
+    private Timer timer;
+
+    public ModernButton(String text) {
+        super(text);
+        setContentAreaFilled(false);
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+        setForeground(Color.WHITE);
+        setFont(ModernPalette.BODY_FONT);
+        
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) { startAnimation(true); }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) { startAnimation(false); }
+        });
+    }
+
+    private void startAnimation(boolean forward) {
+        if (timer != null && timer.isRunning()) timer.stop();
+        timer = new Timer(20, e -> {
+            if (forward) {
+                alpha += 0.1f;
+                if (alpha >= 1f) { alpha = 1f; timer.stop(); }
+            } else {
+                alpha -= 0.1f;
+                if (alpha <= 0f) { alpha = 0f; timer.stop(); }
+            }
+            repaint();
+        });
+        timer.start();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        Color baseColor = ModernPalette.ACCENT_COLOR;
+        if (getModel().isPressed()) {
+            g2.setColor(baseColor.darker());
+        } else {
+            g2.setColor(baseColor);
+            if (alpha > 0) {
+                Color hoverColor = baseColor.brighter();
+                int r = (int)(baseColor.getRed() + (hoverColor.getRed() - baseColor.getRed()) * alpha);
+                int gr = (int)(baseColor.getGreen() + (hoverColor.getGreen() - baseColor.getGreen()) * alpha);
+                int b = (int)(baseColor.getBlue() + (hoverColor.getBlue() - baseColor.getBlue()) * alpha);
+                g2.setColor(new Color(r, gr, b));
+            }
+        }
+        
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 12, 12);
+        g2.dispose();
+        super.paintComponent(g);
+    }
+}
+
+private JPanel createModernHeader(String title, String subtitle) {
+    JPanel header = new JPanel(new BorderLayout());
+    header.setOpaque(false);
+    header.setBorder(BorderFactory.createEmptyBorder(20, 30, 10, 30));
+
+    JLabel lblTitle = new JLabel(title);
+    lblTitle.setFont(ModernPalette.TITLE_FONT);
+    lblTitle.setForeground(ModernPalette.TEXT_PRIMARY);
+
+    JLabel lblSub = new JLabel(subtitle);
+    lblSub.setFont(ModernPalette.BODY_FONT);
+    lblSub.setForeground(ModernPalette.TEXT_SECONDARY);
+
+    header.add(lblTitle, BorderLayout.NORTH);
+    header.add(lblSub, BorderLayout.SOUTH);
+    return header;
+}
+
+private void modernizeTable(JTable table) {
+    table.setRowHeight(40);
+    table.setShowGrid(false);
+    table.setIntercellSpacing(new Dimension(0, 0));
+    table.setSelectionBackground(new Color(230, 240, 255));
+    table.setSelectionForeground(ModernPalette.ACCENT_COLOR);
+    table.setFont(ModernPalette.BODY_FONT);
+    table.setGridColor(ModernPalette.BORDER_COLOR);
+    
+    table.getTableHeader().setBackground(Color.WHITE);
+    table.getTableHeader().setForeground(ModernPalette.TEXT_SECONDARY);
+    table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+    table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ModernPalette.BORDER_COLOR));
+    table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+}
+
+private JPanel createRoundedTablePanel(JTable table) {
+    RoundedPanel wrapper = new RoundedPanel(15, Color.WHITE);
+    wrapper.setLayout(new BorderLayout());
+    wrapper.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    
+    JScrollPane scrollPane = new JScrollPane(table);
+    scrollPane.setBorder(null);
+    scrollPane.getViewport().setBackground(Color.WHITE);
+    
+    wrapper.add(scrollPane, BorderLayout.CENTER);
+    return wrapper;
 }
 }

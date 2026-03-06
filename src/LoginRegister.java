@@ -3,71 +3,193 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import java.awt.BorderLayout;
 import java.sql.*;
 /**
  *
  * @author jiyop
  */
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import javax.swing.JOptionPane;
+import javax.swing.border.EmptyBorder;
+import java.awt.geom.RoundRectangle2D;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+
 public class LoginRegister extends javax.swing.JFrame {
-boolean isLogin = true;
-    /**
-     * Creates new form LoginRegister
-     */
-    public LoginRegister() {
-    initComponents();
-     BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-Graphics2D g = img.createGraphics();
+    // ===== MODERN PALETTE =====
+    public static class ModernPalette {
+        public static final Color SIDEBAR_BG = new Color(28, 31, 38);
+        public static final Color SIDEBAR_ACTIVE = new Color(41, 121, 255);
+        public static final Color CONTENT_BG = new Color(245, 247, 251);
+        public static final Color ACCENT_BLUE = new Color(41, 121, 255);
+        public static final Color ACCENT_EMERALD = new Color(16, 185, 129);
+        public static final Color TEXT_DARK = new Color(31, 41, 55);
+        public static final Color TEXT_LIGHT = new Color(156, 163, 175);
+        
+        public static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 28);
+        public static final Font SUBTITLE_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+        public static final Font UI_FONT = new Font("Segoe UI", Font.PLAIN, 15);
+    }
 
-g.setColor(new Color(41, 121, 255));
-g.fillRoundRect(0, 0, 32, 32, 8, 8);
+    // ===== ROUNDED PANEL =====
+    public static class RoundedPanel extends javax.swing.JPanel {
+        private int radius;
+        private Color backgroundColor;
 
-g.setColor(Color.WHITE);
-g.setFont(new Font("Segoe UI", Font.BOLD, 30));
-g.drawString("F", 8, 24);
+        public RoundedPanel(int radius, Color bgColor) {
+            this.radius = radius;
+            this.backgroundColor = bgColor;
+            setOpaque(false);
+        }
 
-g.dispose();
+        @Override
+        protected void paintComponent(java.awt.Graphics g) {
+            super.paintComponent(g);
+            java.awt.Graphics2D g2 = (java.awt.Graphics2D) g;
+            g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(backgroundColor);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+        }
+    }
 
-setIconImage(img);
-  getContentPane().setBackground(new Color(245,245,245));
-setResizable(false);
-setSize(400, 450);
-setLocationRelativeTo(null);
-    setupLoginMode();
-setupPlaceholders();
-    styleTextField(txtUsername);
-    stylePasswordField(txtPassword);
-
-    styleButton(btnSubmit);
-    styleLinkButton(btnToggle);
-
-    lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
-}
-    private void styleTextField(javax.swing.JTextField field) {
-    field.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200,200,200)));
-    field.setBackground(Color.WHITE);
-    field.setFont(new Font("Segoe UI", Font.PLAIN,16));
-}
-    private void styleLinkButton(javax.swing.JButton button) {
-    button.setFocusPainted(false);
-    button.setBorderPainted(false);
-    button.setContentAreaFilled(false);
-    button.setForeground(new Color(51, 102, 255));
-    button.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-}
-    private void stylePasswordField(javax.swing.JPasswordField field) {
-    field.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(200,200,200)));
-    field.setBackground(Color.WHITE);
-    field.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-}
+    boolean isLogin = true;
     String serverIP;
+    public LoginRegister() {
+        this(null);
+    }
+
+    public LoginRegister(String ip) {
+        this.serverIP = ip;
+        initComponents();
+        setupModernUI();
+        
+        BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setColor(new Color(41, 121, 255));
+        g.fillRoundRect(0, 0, 32, 32, 8, 8);
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Segoe UI", Font.BOLD, 30));
+        g.drawString("F", 8, 24);
+        g.dispose();
+        setIconImage(img);
+    }
+
+    private void setupModernUI() {
+        setTitle("FileBottle - Sign In");
+        setSize(1000, 700);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        
+        // Background container
+        JPanel bgPanel = new JPanel(new GridBagLayout());
+        bgPanel.setBackground(ModernPalette.CONTENT_BG);
+        setContentPane(bgPanel);
+
+        // Main Card
+        RoundedPanel card = new RoundedPanel(25, Color.WHITE);
+        card.setPreferredSize(new Dimension(450, 550));
+        card.setLayout(new BorderLayout());
+        card.setBorder(new EmptyBorder(40, 50, 40, 50));
+        
+        // Header
+        JPanel header = new JPanel(new java.awt.GridLayout(2, 1, 0, 5));
+        header.setOpaque(false);
+        lblTitle.setFont(ModernPalette.TITLE_FONT);
+        lblTitle.setForeground(ModernPalette.TEXT_DARK);
+        lblTitle.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        String displayIP = (serverIP == null) ? "FileBottle" : "Server: " + serverIP;
+        header.add(lblTitle);
+        
+        JLabel lblSub = new JLabel(displayIP);
+        lblSub.setFont(ModernPalette.SUBTITLE_FONT);
+        lblSub.setForeground(ModernPalette.TEXT_LIGHT);
+        lblSub.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        header.add(lblSub);
+        
+        card.add(header, BorderLayout.NORTH);
+
+        // Body (Form)
+        JPanel form = new JPanel(new java.awt.GridLayout(4, 1, 0, 20));
+        form.setOpaque(false);
+        form.setBorder(new EmptyBorder(40, 0, 20, 0));
+
+        styleTextField(txtUsername);
+        stylePasswordField(txtPassword);
+        styleButton(btnSubmit);
+        styleLinkButton(btnToggle);
+
+        form.add(txtUsername);
+        form.add(txtPassword);
+        form.add(btnSubmit);
+        form.add(btnToggle);
+        
+        card.add(form, BorderLayout.CENTER);
+        bgPanel.add(card);
+
+        setupLoginMode();
+        setupPlaceholders();
+    }
+
+    private void styleTextField(javax.swing.JTextField field) {
+        field.setBackground(new Color(243, 244, 246));
+        field.setFont(ModernPalette.UI_FONT);
+        field.setForeground(ModernPalette.TEXT_DARK);
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(229, 231, 235), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+    }
+
+    private void stylePasswordField(javax.swing.JPasswordField field) {
+        field.setBackground(new Color(243, 244, 246));
+        field.setFont(ModernPalette.UI_FONT);
+        field.setForeground(ModernPalette.TEXT_DARK);
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(229, 231, 235), 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+    }
+
+    private void styleButton(javax.swing.JButton button) {
+        button.setBackground(ModernPalette.ACCENT_BLUE);
+        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.setOpaque(true);
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(new Color(37, 99, 235));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(ModernPalette.ACCENT_BLUE);
+            }
+        });
+    }
+
+    private void styleLinkButton(javax.swing.JButton button) {
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setForeground(ModernPalette.ACCENT_BLUE);
+        button.setFont(ModernPalette.SUBTITLE_FONT);
+        button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+    }
 private void setupPlaceholders() {
 
     // USERNAME
@@ -113,56 +235,17 @@ private void setupPlaceholders() {
         }
     });
 }
-public LoginRegister(String ip) {
-    BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-Graphics2D g = img.createGraphics();
+    private void setupLoginMode() {
+        lblTitle.setText(isLogin ? "Sign In" : "Create Account");
+        btnSubmit.setText(isLogin ? "Log In" : "Register");
+        btnToggle.setText(isLogin ? "Don't have an account? Register" : "Already have an account? Sign In");
 
-g.setColor(new Color(41, 121, 255));
-g.fillRoundRect(0, 0, 32, 32, 8, 8);
-
-g.setColor(Color.WHITE);
-g.setFont(new Font("Segoe UI", Font.BOLD, 30));
-g.drawString("F", 8, 24);
-
-g.dispose();
-
-setIconImage(img);
-    initComponents();              // 🔥 MUST BE FIRST
-    this.serverIP = ip;            // store server IP
-setResizable(false);
-setSize(380, 400);
-setLocationRelativeTo(null);
-   
-  getContentPane().setBackground(new Color(245,245,245));
-
-    setupLoginMode();
-setupPlaceholders();
-    styleTextField(txtUsername);
-    stylePasswordField(txtPassword);
-
-    styleButton(btnSubmit);
-    styleLinkButton(btnToggle);
-
-    lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
-}
-   private void setupLoginMode() {
-
-    String displayIP = (serverIP == null) ? "" : " (" + serverIP + ")";
-
-    lblTitle.setText("Login" + displayIP);
-    btnSubmit.setText("Login");
-    btnToggle.setText("Go to Register");
-
-    txtUsername.setText("");
-    txtPassword.setText("");
-}
-    private void styleButton(javax.swing.JButton button) {
-    button.setFocusPainted(false);
-    button.setBorderPainted(false);
-    button.setBackground(new java.awt.Color(51, 102, 255));
-    button.setForeground(java.awt.Color.WHITE);
-    button.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 16));
-}
+        txtUsername.setText("Username");
+        txtUsername.setForeground(Color.GRAY);
+        txtPassword.setText("Password");
+        txtPassword.setEchoChar((char)0);
+        txtPassword.setForeground(Color.GRAY);
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -246,17 +329,8 @@ setupPlaceholders();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnToggleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnToggleActionPerformed
- if (isLogin) {
-        lblTitle.setText("Register ( "+serverIP+" )");
-        btnSubmit.setText("Register");
-        btnToggle.setText("Go to Login");
-    } else {
-        lblTitle.setText("Login ("+serverIP+")");
-        btnSubmit.setText("Login");
-        btnToggle.setText("Go to Register");
-    }
-
-    isLogin = !isLogin;        // TODO add your handling code here:
+        isLogin = !isLogin;
+        setupLoginMode();
     }//GEN-LAST:event_btnToggleActionPerformed
 
     private void btnSubmitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubmitActionPerformed
